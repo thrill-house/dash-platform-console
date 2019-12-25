@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
+import Identities from '@/views/Identities.vue';
 
 Vue.use(VueRouter);
 
@@ -7,7 +8,7 @@ const routes = [
   {
     path: '/identities',
     name: 'identities',
-    component: () => import(/* webpackChunkName: "identities" */ '../views/Identities.vue'),
+    component: Identities,
   },
   {
     path: '/contracts',

@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-app-bar app>
-      <v-toolbar-title>dashevo exprlorer</v-toolbar-title>
+      <v-toolbar-title>Dash Platform Console</v-toolbar-title>
 
       <v-spacer />
 

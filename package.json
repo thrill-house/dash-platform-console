@@ -1,5 +1,6 @@
 {
   "name": "dash-platform-console",
+  "description": "Dash Platform Console",
   "version": "0.1.0",
   "private": true,
   "scripts": {
