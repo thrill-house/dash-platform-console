@@ -1,8 +1,14 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import createPersistedState from 'vuex-persistedstate';
+import DashDemoSDK from 'evo-net-demo';
 
 Vue.use(Vuex);
+
+const demoSDK = new DashDemoSDK();
+const seeds = [
+  { service: '18.236.131.253' },
+];
 
 export const identityTypes = {
   application: {
@@ -17,6 +23,10 @@ export const identityTypes = {
 
 export default new Vuex.Store({
   state: {
+    isSyncing: true,
+    mnemonic: 'final vocal warm mansion person awesome sell spend solar tobacco gain canoe',
+    errorDetails: null,
+    isError: false,
     identities: {
       user: [],
       application: [],
@@ -47,13 +57,31 @@ export default new Vuex.Store({
         [id]: contract,
       };
     },
+    changeMnemonic(state, mnemonic) {
+      state.mnemonic = mnemonic;
+    },
+    setSyncing(state, syncStatus) {
+      state.isSyncing = syncStatus;
+    },
+    setError(state, error) {
+      state.errorDetails = error;
+      state.isError = true;
+    },
+    clearError(state) {
+      state.errorDetails = null;
+      state.isError = false;
+    },
+    reset(state) {
+      state.errorDetails = null;
+      state.isError = false;
+      state.isSyncing = true;
+    },
   },
   actions: {
     async createIdentity({ commit }, type) {
-      const identity = await new Promise((resolve) => {
-        setTimeout(() => resolve({ id: `t_${type.name}_id_${Date.now()}`, type }), 2000);
-      });
-      commit('addIdentity', { identity, type });
+      const identityId = await demoSDK.registerIdentity(type);
+      const identity = await demoSDK.getIdentityFromNetwork(identityId);
+      commit('addIdentity', { identity, type: identity.getType() });
     },
     async registerName({ commit }, { identity, name }) {
       await new Promise((resolve) => {
@@ -66,6 +94,29 @@ export default new Vuex.Store({
         setTimeout(() => resolve(json), 2000);
       });
       commit('addContract', { identity, contract });
+    },
+    async initWallet({ commit }) {
+      commit('reset', true);
+      const { mnemonic } = this.state;
+
+      console.debug('Start wallet sync...');
+
+      try {
+        await demoSDK.init({ mnemonic, seeds });
+      } catch (e) {
+        console.debug('Wallet synchronized with an error:');
+        console.error(e);
+        commit('setError', e);
+        commit('setSyncing', false);
+        return;
+      }
+
+      console.debug('Wallet is synchronized');
+
+      commit('setSyncing', false);
+      demoSDK.listIdentities().forEach((identity) => {
+        commit('addIdentity', { identity, type: identity.getType() });
+      });
     },
   },
   getters: {

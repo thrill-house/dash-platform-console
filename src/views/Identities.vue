@@ -1,5 +1,28 @@
 <template>
   <v-container>
+
+    <v-row>
+      <v-card>
+        <v-card-title>
+          Error occurred
+        </v-card-title>
+        <v-card-text>
+          Text is here
+        </v-card-text>
+      </v-card>
+    </v-row>
+
+    <v-row>
+      <v-card>
+        <v-card-title>
+          Wallet is syncing
+        </v-card-title>
+        <v-card-text>
+          This usually takes from 10 seconds to 1 minute on fast internet
+        </v-card-text>
+      </v-card>
+    </v-row>
+
     <v-row>
       <v-col
         v-for="list in identityLists"
@@ -50,7 +73,7 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(['identityLists']),
+    ...mapGetters(['identityLists', 'identities', 'isSyncing', 'errorDetails', 'isError']),
   },
   methods: {
     createIdentity(type) {
@@ -59,6 +82,9 @@ export default {
         this.createIdentityLoading[type.name] = false;
       });
     },
+  },
+  created() {
+    this.$store.dispatch('initWallet');
   },
 
 };
