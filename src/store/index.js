@@ -108,6 +108,7 @@ export default new Vuex.Store({
         console.error(e);
         commit('setError', e);
         commit('setSyncing', false);
+        demoSDK.account.disconnect();
         return;
       }
 
@@ -122,10 +123,11 @@ export default new Vuex.Store({
   getters: {
     identityLists(state) {
       const { identities } = state;
-      return Object.keys(identityTypes).map(typeName => ({
+      const lists = Object.keys(identityTypes).map(typeName => ({
         type: identityTypes[typeName],
         items: identities[typeName],
       }));
+      return lists;
     },
     userIdentitiesWithNames(state) {
       const { user } = state.identities;
@@ -140,6 +142,15 @@ export default new Vuex.Store({
         ...identity,
         contract: state.contracts[identity.id],
       }));
+    },
+    errorDetails(state) {
+      return state.errorDetails;
+    },
+    isSyncing(state) {
+      return state.isSyncing;
+    },
+    isError(state) {
+      return state.isError;
     },
   },
   plugins: [createPersistedState()],

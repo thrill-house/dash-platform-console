@@ -1,19 +1,19 @@
 <template>
   <v-container>
 
-    <v-row>
+    <v-row v-show="isError">
       <v-card>
         <v-card-title>
           Error occurred
         </v-card-title>
         <v-card-text>
-          Text is here
+          {{errorDetails ? errorDetails.message : ''}}
         </v-card-text>
       </v-card>
     </v-row>
 
-    <v-row>
-      <v-card>
+    <v-row v-show="isSyncing">
+      <v-card loading="primary">
         <v-card-title>
           Wallet is syncing
         </v-card-title>
@@ -23,7 +23,8 @@
       </v-card>
     </v-row>
 
-    <v-row>
+    <v-row v-show="!isSyncing && !isError">
+      {{identityLists}}
       <v-col
         v-for="list in identityLists"
         :key="list.type.value"
