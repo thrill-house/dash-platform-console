@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-navigation-drawer v-model="drawer" app>
+    <v-navigation-drawer v-model="drawer" disable-resize-watcher app>
       <v-list>
         <v-list-item link :to="{ name: 'wallet' }">
           <v-list-item-content>
@@ -53,6 +53,16 @@
 
     <v-content>
       <v-container fluid>
+        <v-alert
+          v-model="welcome"
+          border="top"
+          colored-border
+          type="info"
+          elevation="2"
+          dismissible
+        >
+          This is a box.
+        </v-alert>
         <!-- <v-overlay :value="isSyncing"></v-overlay> -->
         <router-view />
         <v-snackbar v-model="snackbar.show" :top="'top'" :color="'error'">
@@ -69,7 +79,7 @@ import { mapGetters } from "vuex";
 
 export default {
   data() {
-    return { drawer: false, snackbar: { show: false, text: "" } };
+    return { drawer: false, welcome: true, snackbar: { show: false, text: "" } };
   },
   computed: {
     ...mapGetters(["isSyncing"]),
