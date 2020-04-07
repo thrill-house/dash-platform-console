@@ -95,7 +95,7 @@ export default new Vuex.Store({
     setSnackError(state, snackError) {
       state.snackError = snackError;
     },
-    resetState(state) {
+    resetState() {
       this.replaceState(JSON.parse(JSON.stringify(initState)));
     },
     resetSync(state) {
@@ -110,11 +110,13 @@ export default new Vuex.Store({
       commit("setSyncing", true);
       const contract = await platform.contracts.get(identifier);
       const identity = { id: identifier };
-      console.log(contract);
+      console.dir({ contract });
+
+      if (contract === null) console.log("looks like its null");
       commit("addContract", { identity, contract });
       commit("setSyncing", false);
     },
-    async sendDash({ commit, dispatch }, { sendToAddress, satoshis }) {
+    async sendDash({ dispatch }, { sendToAddress, satoshis }) {
       const { account } = client;
       try {
         const transaction = account.createTransaction({
@@ -130,7 +132,14 @@ export default new Vuex.Store({
         throw e;
       }
     },
-    async queryDocuments({ commit, dispatch }, { contractId, typeLocator, queryOpts }) {
+    async queryDocuments(
+      { commit, dispatch },
+      {
+        contractId,
+        // typeLocator,
+        queryOpts,
+      }
+    ) {
       console.log(queryOpts);
       commit("setSyncing", true);
       try {

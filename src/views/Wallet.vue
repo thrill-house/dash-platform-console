@@ -105,7 +105,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="utxo in getWallet.utxos">
+                  <tr v-for="(utxo, i) in getWallet.utxos" :key="i">
                     <td>{{ utxo.address }}</td>
                     <td>{{ utxo.satoshis }}</td>
                     <td>
@@ -281,11 +281,10 @@ export default {
       event.stopImmediatePropagation();
       event.preventDefault();
 
-      const { sendToAddress, sendToAmount, sendDash } = this;
+      const { sendToAddress, sendDash } = this;
       const satoshis = Unit.fromBTC(this.sendToAmount).toSatoshis();
       sendDash({ sendToAddress, satoshis }).then(() => (this.sendToAddress = ""));
     },
   },
-  created() {},
 };
 </script>

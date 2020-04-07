@@ -69,9 +69,9 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(name, i) in searchDashNameList" :key="i">
-              <td>{{ name.label }}</td>
-              <td>{{ name.userId }}</td>
+            <tr v-for="(user, i) in searchDashNameList" :key="i">
+              <td>{{ user.label }}</td>
+              <td>{{ user.userId }}</td>
             </tr>
           </tbody>
         </v-simple-table>

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */ /* eslint-disable no-console */
 <template>
   <v-container>
     <v-row>
@@ -34,23 +35,66 @@
             </v-expansion-panel-content>
           </v-expansion-panel>
           <v-expansion-panel dense>
-            <v-expansion-panel-header dense>Query Options for '{{ selectedDocumentType }}'</v-expansion-panel-header>
+            <v-expansion-panel-header dense
+              >Query Options for '{{ selectedDocumentType }}'</v-expansion-panel-header
+            >
             <v-expansion-panel-content dense>
               <v-row dense>
-                <v-col cols="12" md="4">
-                  <v-text-field v-model="queryModifiers.limit" label="limit" type="number"></v-text-field>
+                <v-col cols="12" md="1">
+                  <v-text-field
+                    v-model="queryModifiers.limit"
+                    label="limit"
+                    type="number"
+                  ></v-text-field>
                 </v-col>
 
-                <v-col cols="12" md="4">
-                  <v-text-field v-model="queryModifiers.orderBy" label="orderBy"></v-text-field>
+                <v-col cols="12" md="1">
+                  <v-text-field
+                    v-model="queryModifiers.startAt"
+                    label="startAt"
+                    type="number"
+                  ></v-text-field>
                 </v-col>
-                <v-col cols="12" md="4">
-                  <v-text-field v-model="queryModifiers.startAt" label="startAt" type="number"></v-text-field>
+                <v-col cols="12" md="3">
+                  <v-select
+                    v-model="orderBy1.property"
+                    :items="documentProperties"
+                    label="orderBy 1"
+                    clearable
+                  ></v-select>
+                </v-col>
+                <v-col cols="12" md="2">
+                  <v-select
+                    v-model="orderBy1.direction"
+                    :items="['asc', 'desc']"
+                    label="Direction 1"
+                  ></v-select>
+                </v-col>
+                <v-col cols="12" md="3">
+                  <v-select
+                    v-model="orderBy2.property"
+                    :items="documentProperties"
+                    label="orderBy 2"
+                    clearable
+                  ></v-select>
+                </v-col>
+                <v-col cols="12" md="2">
+                  <v-select
+                    v-model="orderBy2.direction"
+                    :items="['asc', 'desc']"
+                    label="Direction 2"
+                  ></v-select>
                 </v-col>
               </v-row>
               <v-row v-for="(property, i) in documentProperties" :key="i" dense>
                 <v-col cols="12" md="4" dense>
-                  <v-text-field label="Index Field" dense outlined readonly :value="property"></v-text-field>
+                  <v-text-field
+                    label="Index Field"
+                    dense
+                    outlined
+                    readonly
+                    :value="property"
+                  ></v-text-field>
                 </v-col>
                 <v-col cols="12" md="4" dense>
                   <v-select
@@ -62,7 +106,12 @@
                   ></v-select>
                 </v-col>
                 <v-col cols="12" md="4" dense>
-                  <v-text-field v-model="whereValues[property]" label="Value" dense outlined></v-text-field>
+                  <v-text-field
+                    v-model="whereValues[property]"
+                    label="Value"
+                    dense
+                    outlined
+                  ></v-text-field>
                 </v-col>
               </v-row>
             </v-expansion-panel-content>
@@ -72,10 +121,9 @@
     </v-row>
     <v-row v-if="selectedContractId">
       <v-col>
-        <v-btn
-          color="primary"
-          @click="submitQuery()"
-        >Query documents of type "{{ selectedDocumentType }}"</v-btn>
+        <v-btn color="primary" @click="submitQuery()"
+          >Query documents of type "{{ selectedDocumentType }}"</v-btn
+        >
       </v-col>
     </v-row>
     <v-row v-if="Object.keys(queryOpts).length">
@@ -87,7 +135,7 @@
     <v-row>
       <v-col>
         <h2 v-if="Object.keys(selectedDocuments).length">Documents</h2>
-        <pre v-for="document in selectedDocuments">{{ prettyJson(document) }}</pre>
+        <pre v-for="(document, i) in selectedDocuments" :key="i">{{ prettyJson(document) }}</pre>
       </v-col>
     </v-row>
     <v-row>
@@ -107,7 +155,9 @@
             <v-btn icon @click="showJsonDialog = false">
               <v-icon>mdi-close</v-icon>
             </v-btn>
-            <v-toolbar-title>Document "{{ selectedDocumentType }}" for {{ selectedContractId }}</v-toolbar-title>
+            <v-toolbar-title
+              >Document "{{ selectedDocumentType }}" for {{ selectedContractId }}</v-toolbar-title
+            >
             <v-spacer></v-spacer>
             <v-toolbar-items>
               <v-btn text :loading="submitting" @click="validateJsonAndSubmit">submit</v-btn>
@@ -153,7 +203,9 @@ export default {
       showJsonDialog: false,
       submitting: false,
       json: "",
-      queryModifiers: { limit: 10, startAt: 0, order: "" },
+      queryModifiers: { limit: 10, startAt: 0 },
+      orderBy1: { property: "", direction: "asc" },
+      orderBy2: { property: "", direction: "asc" },
       whereValues: {},
       whereOperators: {},
       whereFields: {},
@@ -208,7 +260,7 @@ export default {
       if (!contract) {
         this.addContract({ identifier: selectedContractId });
         console.log("fetching unknown contract and adding to state");
-        return {};
+        return {}; // Return empty object for lazy hydration
       }
       console.log(contract);
       // console.log(Object.keys(contract["domain"].indices[0].properties[0]));
@@ -228,7 +280,8 @@ export default {
       if (this.selectedContractId) {
         types = Object.keys(this.selectedContract);
       }
-      this.selectedDocumentType = types[0];
+      // eslint-disable-next-line
+      this.selectedDocumentType = types[0]; // oh so hackisch FIXME
       return types;
     },
   },
@@ -243,22 +296,49 @@ export default {
         queryDocuments,
         selectedContractId,
         selectedDocumentType,
+        orderBy1,
+        orderBy2,
       } = this;
 
-      const { limit, startAt, orderBy } = queryModifiers;
-      this.queryOpts = { limit, startAt, orderBy };
+      const { limit, startAt } = queryModifiers;
+      this.queryOpts = { limit, startAt };
+
+      const order = [];
+      if (orderBy1.property) order.push([orderBy1.property, orderBy1.direction]);
+      if (orderBy2.property) order.push([orderBy2.property, orderBy2.direction]);
+      this.queryOpts.order = order;
 
       const where = [];
       let i;
       for (i in documentProperties) {
         const property = documentProperties[i];
-        if (whereOperators[property] && whereValues[property]) {
-          where.push([property, whereOperators[property], whereValues[property]]);
+
+        const op = whereOperators[property];
+        const val = whereValues[property];
+
+        if (op && val) {
+          const arrayOps = ["in", "contains", "elementMatch"];
+          if (arrayOps.includes(op)) {
+            try {
+              where.push([property, whereOperators[property], JSON.parse(whereValues[property])]);
+            } catch (e) {
+              this.showSnackError(e.message + " ( Make sure to use double ticks instead of ' )");
+            }
+          } else if (op === "length") {
+            const num = parseInt(val);
+            if (num) {
+              where.push([property, whereOperators[property], parseInt(whereValues[property])]);
+            } else {
+              this.showSnackError(`"${val}" must be a number`);
+            }
+          } else {
+            where.push([property, whereOperators[property], whereValues[property]]);
+          }
         }
       }
       this.queryOpts.where = where.length ? where : undefined;
 
-      console.log(this.queryOpts);
+      console.dir(this.queryOpts, { depth: 5 });
       queryDocuments({
         contractId: selectedContractId,
         typeLocator: selectedDocumentType,

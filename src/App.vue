@@ -1,24 +1,65 @@
 <template>
   <v-app>
+    <v-navigation-drawer v-model="drawer" app>
+      <v-list>
+        <v-list-item link :to="{ name: 'wallet' }">
+          <v-list-item-content>
+            <v-list-item-title>Wallet</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item link :to="{ name: 'identities' }">
+          <v-list-item-content>
+            <v-list-item-title>Identities</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item link :to="{ name: 'names' }">
+          <v-list-item-content>
+            <v-list-item-title>Names</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item link :to="{ name: 'contracts' }">
+          <v-list-item-content>
+            <v-list-item-title>Contracts</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item link :to="{ name: 'documents' }">
+          <v-list-item-content>
+            <v-list-item-title>Documents</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
     <v-app-bar app>
+      <v-app-bar-nav-icon class="hidden-md-and-up" @click.stop="drawer = !drawer" />
       <v-toolbar-title>Dash Platform Console</v-toolbar-title>
 
       <v-spacer />
 
-      <v-btn class="ml-1" text :to="{ name: 'wallet' }">Wallet</v-btn>
-      <v-btn class="ml-1" text :to="{ name: 'identities' }">Identities</v-btn>
-      <v-btn class="ml-1" text :to="{ name: 'names' }">Names</v-btn>
-      <v-btn class="ml-1" text :to="{ name: 'contracts' }">Contracts</v-btn>
-      <v-btn class="ml-1" text :to="{ name: 'documents' }">Documents</v-btn>
-      <v-progress-linear :active="isSyncing" indeterminate absolute bottom color="primary"></v-progress-linear>
+      <v-toolbar-items class="hidden-sm-and-down">
+        <v-btn class="ml-1" text :to="{ name: 'wallet' }">Wallet</v-btn>
+        <v-btn class="ml-1" text :to="{ name: 'identities' }">Identities</v-btn>
+        <v-btn class="ml-1" text :to="{ name: 'names' }">Names</v-btn>
+        <v-btn class="ml-1" text :to="{ name: 'contracts' }">Contracts</v-btn>
+        <v-btn class="ml-1" text :to="{ name: 'documents' }">Documents</v-btn>
+      </v-toolbar-items>
+      <v-progress-linear
+        :active="isSyncing"
+        indeterminate
+        absolute
+        bottom
+        color="primary"
+      ></v-progress-linear>
     </v-app-bar>
+
     <v-content>
-      <!-- <v-overlay :value="isSyncing"></v-overlay> -->
-      <router-view />
-      <v-snackbar v-model="snackbar.show" :top="'top'" :color="'error'">
-        {{ snackbar.text }}
-        <v-btn dark text @click="snackbar.show = false">Close</v-btn>
-      </v-snackbar>
+      <v-container fluid>
+        <!-- <v-overlay :value="isSyncing"></v-overlay> -->
+        <router-view />
+        <v-snackbar v-model="snackbar.show" :top="'top'" :color="'error'">
+          {{ snackbar.text }}
+          <v-btn dark text @click="snackbar.show = false">Close</v-btn>
+        </v-snackbar>
+      </v-container>
     </v-content>
   </v-app>
 </template>
@@ -28,7 +69,7 @@ import { mapGetters } from "vuex";
 
 export default {
   data() {
-    return { snackbar: { show: false, text: "" } };
+    return { drawer: false, snackbar: { show: false, text: "" } };
   },
   computed: {
     ...mapGetters(["isSyncing"]),
