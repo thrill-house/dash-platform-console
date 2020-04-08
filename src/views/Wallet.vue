@@ -147,9 +147,7 @@
           ></v-textarea>
         </v-card-text>
         <v-card-actions>
-          <v-btn x-large outlined color="secondary" text @click="mnemonicDialog = false"
-            >Cancel</v-btn
-          >
+          <v-btn x-large @click="mnemonicDialog = false">Close</v-btn>
           <v-spacer></v-spacer>
           <v-btn x-large color="primary" @click="changeMnemonic"
             >{{ mnemonicText ? "Change" : "Generate" }} Mnemonic</v-btn

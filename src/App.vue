@@ -53,7 +53,7 @@
 
     <v-content>
       <v-container fluid>
-        <v-alert
+        <!-- <v-alert
           v-model="welcome"
           border="top"
           colored-border
@@ -62,7 +62,7 @@
           dismissible
         >
           This is a box.
-        </v-alert>
+        </v-alert> -->
         <!-- <v-overlay :value="isSyncing"></v-overlay> -->
         <router-view />
         <v-snackbar v-model="snackbar.show" :top="'top'" :color="'error'">
@@ -86,8 +86,8 @@ export default {
   },
   created() {
     this.$store.dispatch("initWallet");
-    this.$vuetify.theme.dark =
-      window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    // this.$vuetify.theme.dark =
+    //   window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
     this.$store.watch(
       (state) => state.snackError.text,
       () => {
