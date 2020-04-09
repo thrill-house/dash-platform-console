@@ -85,7 +85,7 @@
             <v-text-field v-model="name" counter label="Name" />
           </v-card-text>
           <v-card-actions>
-            <v-btn text @click="showNameDialog = false">close</v-btn>
+            <v-btn @click="showNameDialog = false">close</v-btn>
             <v-spacer />
             <v-btn color="primary" :loading="submitting" type="submit">Register</v-btn>
           </v-card-actions>

@@ -12,7 +12,8 @@ const initState = {
   wallet: {
     // mnemonic: "become leisure project merry rebuild forest bread foot during orange august raw",
     // mnemonic: "control toe garage transfer shrimp pill wear detail ribbon only unveil nephew",
-    mnemonic: "snack immune develop side proof air dune melt replace cover apology joke",
+    // mnemonic: "snack immune develop side proof air dune melt replace cover apology joke",
+    mnemonic: null,
     confirmedBalance: 0,
   },
   errorDetails: null,
