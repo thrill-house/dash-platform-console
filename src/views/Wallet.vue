@@ -9,12 +9,11 @@
           <v-container v-if="!hasWallet"
             ><v-btn x-large color="primary" class="ma-2" @click.stop="createMnemonic"
               >Create Wallet</v-btn
-            ><v-btn x-large color="primary" class="ma-2" @click="showRestoreMnemonic"
-              >Restore Wallet</v-btn
-            >
+            ><v-btn x-large class="ma-2" @click="showRestoreMnemonic">Restore Wallet</v-btn>
           </v-container>
           <v-container v-if="hasWallet" fluid justify="center"
-            ><v-btn x-large class="ma-2" @click="backupMnemonic">Backup Wallet</v-btn
+            ><v-btn x-large color="primary" class="ma-2" @click="backupMnemonic"
+              >Backup Wallet</v-btn
             ><v-btn x-large class="ma-2" @click="forgetState">Forget Wallet</v-btn>
           </v-container>
         </v-card-text></v-card
@@ -29,7 +28,23 @@
                 <v-list-item-content>
                   <v-list-item-title class="headline mb-1">
                     {{ balanceInDash }} Dash
-                    <v-icon @click="refreshWallet">mdi-refresh</v-icon>
+                    <v-tooltip bottom>
+                      <template v-slot:activator="{ on }">
+                        <v-btn
+                          fab
+                          absolute
+                          small
+                          right
+                          :loading="isRefreshingBalance"
+                          style="z-index: 4;"
+                          @click="refreshWallet"
+                          v-on="on"
+                        >
+                          <v-icon color="primary" dark>mdi-refresh</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>Refresh Balance</span>
+                    </v-tooltip>
                   </v-list-item-title>
                   <v-list-item-subtitle
                     >{{ confirmedBalanceInDash }} confirmed</v-list-item-subtitle
@@ -41,22 +56,44 @@
               </v-list-item>
               <v-list-item>
                 <v-list-item-content>
-                  <v-list-item-title class="headline mb-2">Receiving address</v-list-item-title>
+                  <v-list-item-title class="headline mb-2"
+                    >Receiving address
+
+                    <v-tooltip v-model="addressCopied" right>
+                      <template>
+                        <v-icon class="ml-1 mt-n1" @click="copyReceivingAddressToClipboard"
+                          >mdi-clipboard-multiple-outline</v-icon
+                        >
+                      </template>
+                      <span>Copied</span>
+                    </v-tooltip>
+                  </v-list-item-title>
                   <v-list-item-subtitle>
                     <pre
-                      style="
-                        font-size: 1.2em;
-                      ">{{ getWallet.unusedAddress }}<v-icon @click="goToFaucet">mdi-water</v-icon></pre>
+                      style="font-size: 1.5em;"
+                      class="text-wrap"
+                      @click="copyReceivingAddressToClipboard"
+                      >{{ getWallet.unusedAddress }}
+                    </pre>
+                    <v-tooltip right>
+                      <template v-slot:activator="{ on }">
+                        <v-btn small class="my-2" @click="goToFaucet" v-on="on">Get Dash</v-btn>
+                      </template>
+                      <span>Receive free Dash from the Faucet</span>
+                    </v-tooltip>
                   </v-list-item-subtitle>
                 </v-list-item-content>
               </v-list-item>
             </v-col>
+
             <v-col style="text-align: center;">
-              <qrcode
-                :value="getWallet.unusedAddress"
-                :options="{ width: 200 }"
-                style="margin-top: -5px;"
-              ></qrcode>
+              <div style="display: inline-block;" @click="copyReceivingAddressToClipboard">
+                <qrcode
+                  :value="getWallet.unusedAddress"
+                  :options="{ width: 200 }"
+                  style="margin-top: -5px;"
+                ></qrcode>
+              </div>
             </v-col>
           </v-row>
         </v-container>
@@ -67,6 +104,7 @@
               v-model="sendToAddress"
               :error="!sendToAddressValid"
               label="Send Dash to Address"
+              :disabled="!getWallet.balance"
               outlined
               hint="Enter a valid Dash Address"
             ></v-text-field>
@@ -105,7 +143,9 @@
                     "
                   >
                     <td>{{ address.address }}</td>
-                    <td>{{ address.unconfirmedBalanceSat + address.balanceSat }}</td>
+                    <td>
+                      {{ fromDuffsToDash(address.unconfirmedBalanceSat + address.balanceSat) }}
+                    </td>
                     <td>{{ address.used }}</td>
                   </tr>
                 </tbody>
@@ -128,7 +168,7 @@
                 <tbody>
                   <tr v-for="(utxo, i) in getWallet.utxos" :key="i">
                     <td>{{ utxo.address }}</td>
-                    <td>{{ utxo.satoshis }}</td>
+                    <td>{{ fromDuffsToDash(utxo.satoshis) }}</td>
                     <td>
                       <a
                         :href="
@@ -194,31 +234,36 @@
         <v-card-text>
           <v-container>
             <v-row>
-              <v-list-item>
-                <v-list-item-content>
-                  <v-list-item-title class="headline mb-2">To</v-list-item-title>
-                  <v-list-item-subtitle>
-                    <pre class="ml-10" style="font-size: 1.2em;">{{ sendToAddress }}</pre>
-                  </v-list-item-subtitle>
-                </v-list-item-content>
-              </v-list-item>
-              <v-list-item>
-                <v-list-item-content>
-                  <v-list-item-title class="headline mb-2">Amount</v-list-item-title>
-                  <v-list-item-subtitle>
-                    <v-text-field
-                      v-model="sendToAmount"
-                      :error="!sendToAmountValid"
-                      class="mt-1"
-                      outlined
-                      required
-                      autofocus
-                      @keydown.enter.prevent="submitSendDash"
-                    ></v-text-field>
-                  </v-list-item-subtitle>
-                </v-list-item-content>
-              </v-list-item>
-              <v-col cols="12" sm="6" md="4"></v-col>
+              <v-col>
+                <v-list-item>
+                  <v-list-item-content>
+                    <v-list-item-title class="headline mb-2">Send To</v-list-item-title>
+                    <v-list-item-subtitle>
+                      <pre style="font-size: 1.2em;" class="text-wrap"
+                        >{{ getWallet.unusedAddress }}
+                    </pre
+                      >
+                    </v-list-item-subtitle>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item>
+                  <v-list-item-content>
+                    <v-list-item-title class="headline mb-2">Amount</v-list-item-title>
+                    <v-list-item-subtitle>
+                      <v-text-field
+                        ref="sendtoamount"
+                        v-model="sendToAmount"
+                        :error="!sendToAmountValid"
+                        class="mt-1"
+                        outlined
+                        required
+                        autofocus
+                        @keydown.enter.prevent="submitSendDash"
+                      ></v-text-field>
+                    </v-list-item-subtitle>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-col>
             </v-row>
           </v-container>
         </v-card-text>
@@ -246,8 +291,10 @@ const { Address, Unit } = dashcore;
 export default {
   data() {
     return {
+      addressCopied: false,
       sendToAddress: "",
       sendToAmount: null,
+      isRefreshingBalance: false,
       dialog: true,
       mnemonicDialog: false,
       mnemonicDialogIsRestore: false,
@@ -294,10 +341,21 @@ export default {
       }
     },
   },
+  watch: {
+    sendDashDialog() {
+      console.log("hello");
+      setTimeout(() => this.$refs.sendtoamount.focus(), 150);
+      // this.$refs.sendtoamount.focus();
+    },
+  },
   methods: {
     ...mapActions(["searchDashNames", "sendDash", "setMnemonic", "setSyncing"]),
     refreshWallet() {
+      this.isRefreshingBalance = true;
       this.$store.dispatch("refreshWallet");
+      setTimeout(() => {
+        this.isRefreshingBalance = false;
+      }, 1000);
     },
     goToFaucet() {
       window.open("http://devnet-evonet-28309188.us-west-2.elb.amazonaws.com/", "_blank");
@@ -312,6 +370,22 @@ export default {
       document.execCommand("copy");
       window.getSelection().removeAllRanges();
     },
+    async copyReceivingAddressToClipboard() {
+      try {
+        const el = document.createElement("textarea");
+        el.value = this.getWallet.unusedAddress;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+        this.addressCopied = true;
+        setTimeout(() => {
+          this.addressCopied = false;
+        }, 1000);
+      } catch (e) {
+        this.showSnackError(e);
+      }
+    },
     async showCreateMnemonic(ms) {
       return new Promise((resolve) => {
         this.mnemonicDialogLabel = "Generating wallet ..";
@@ -324,9 +398,10 @@ export default {
     },
     async createMnemonic() {
       // Delay needed so viewport doesn't freeze up
-      this.setSyncing(true);
+      this.$store.commit("setSyncing", true);
       this.showCreateMnemonic(200).then(async () => {
         this.$store.commit("resetState");
+        this.$store.commit("setMnemonic", null); // This creates a new mnemonic
         await this.$store.dispatch("initWallet");
         this.mnemonicText = this.getWallet.mnemonic;
         this.mnemonicDialogLabel = "Wallet";
@@ -357,6 +432,9 @@ export default {
       await this.$store.dispatch("initWallet");
       this.mnemonicText = this.getWallet.mnemonic;
       this.mnemonicDialogLoading = false;
+    },
+    fromDuffsToDash(duffs) {
+      return Unit.fromSatoshis(duffs).toBTC();
     },
     submitSendDash(event) {
       event.stopImmediatePropagation();

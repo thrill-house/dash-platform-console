@@ -9,11 +9,14 @@ const DashJS = require("dash");
 let client;
 const initState = {
   isSyncing: false,
+  refresherId: null,
   wallet: {
     // mnemonic: "become leisure project merry rebuild forest bread foot during orange august raw",
     // mnemonic: "control toe garage transfer shrimp pill wear detail ribbon only unveil nephew",
+    // vendor inch curtain admit tumble open arch strong segment wrestle head earth
     // mnemonic: "snack immune develop side proof air dune melt replace cover apology joke",
-    mnemonic: null,
+    // snack immune develop side proof air dune melt replace cover apology joke
+    mnemonic: undefined,
     confirmedBalance: 0,
   },
   errorDetails: null,
@@ -107,9 +110,11 @@ export default new Vuex.Store({
   },
   actions: {
     async addContract({ commit }, { identifier }) {
+      console.log("id", identifier);
       const { platform } = client;
       commit("setSyncing", true);
       const contract = await platform.contracts.get(identifier);
+      console.log(contract);
       const identity = { id: identifier };
       console.dir({ contract });
 
@@ -180,6 +185,7 @@ export default new Vuex.Store({
       } catch (e) {
         dispatch("showSnackError", e);
         console.log(e);
+        throw e;
       }
     },
     async registerName({ commit }, { identityId, name }) {
@@ -195,10 +201,11 @@ export default new Vuex.Store({
       console.log("doc", doc);
       commit("addName", { identity, name });
     },
-    async registerContract({ commit, dispatch }, { identity, json }) {
+    async registerContract({ commit, dispatch }, { identityId, json }) {
       const { platform } = client;
+      console.log(identityId);
       try {
-        identity = await platform.identities.get(identity.id);
+        let identity = await platform.identities.get(identityId);
         const contract = await platform.contracts.create(json, identity);
         await platform.contracts.broadcast(contract, identity);
         commit("addContract", { identity, contract });
@@ -243,7 +250,7 @@ export default new Vuex.Store({
         sdkApps.disconnect();
       }
     },
-    async initWallet({ commit, dispatch }) {
+    async initWallet({ commit, dispatch, getters }) {
       const { mnemonic } = this.state.wallet;
       commit("resetSync", true);
 
@@ -272,8 +279,20 @@ export default new Vuex.Store({
             },
           },
         });
+        // const onReceivedTransaction = function (data) {
+        //   const { account } = client;
+        //   console.log("Received tx", data.txid);
+        //   console.log("Total pending confirmation", account.getUnconfirmedBalance());
+        //   console.log("Total balance", account.getTotalBalance());
+        // };
+        // client.account.on("FETCHED/UNCONFIRMED_TRANSACTION", onReceivedTransaction);
         await client.isReady().then(async () => {
           dispatch("refreshWallet");
+          setInterval(function () {
+            console.log(getters.hasWallet);
+            if (getters.hasWallet) dispatch("refreshWallet");
+          }, 5000);
+          console.dir({ client }, { depth: 5 });
         });
       } catch (e) {
         console.debug("Wallet synchronized with an error:");
@@ -318,12 +337,12 @@ export default new Vuex.Store({
           unconfirmedBalance,
           addresses,
         });
-        console.log("Funding address", account.getUnusedAddress());
-        console.log("Confirmed Balance", account.getConfirmedBalance());
-        console.log("Unconfirmed Balance", account.getUnconfirmedBalance());
+        // console.log("Funding address", account.getUnusedAddress());
+        // console.log("Confirmed Balance", account.getConfirmedBalance());
+        // console.log("Unconfirmed Balance", account.getUnconfirmedBalance());
         console.log("Total Balance", account.getTotalBalance());
-        console.log("getAccount", wallet.getAccount());
-        console.log("Mnemonic", mnemonic);
+        // console.log("Mnemonic", mnemonic);
+        // console.log("getAccount", wallet.getAccount());
       } catch (e) {
         dispatch("showSnackError", e);
         console.log(e);
@@ -350,6 +369,38 @@ export default new Vuex.Store({
       }));
       console.log("lists", lists);
       return lists;
+    },
+    userIdentities(state) {
+      const { user } = state.identities;
+      return user.map((identity) => ({
+        text: identity.id,
+        value: identity.id,
+        names: state.names[identity.id] || [],
+        type: "user",
+      }));
+    },
+    applicationIdentities(state) {
+      const { application } = state.identities;
+      return application.map((identity) => ({
+        text: identity.id,
+        value: identity.id,
+        type: "application",
+      }));
+    },
+    contractIdentities(state) {
+      const { contracts } = state;
+      console.log(contracts);
+      let n = Object.keys(contracts).map((identity) => ({
+        text: identity,
+        value: identity,
+        type: "application",
+      }));
+      console.log("n", n);
+      return n;
+    },
+    names(state) {
+      const { names } = state;
+      return names;
     },
     userIdentitiesWithNames(state) {
       const { user } = state.identities;

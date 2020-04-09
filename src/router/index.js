@@ -1,6 +1,7 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 import Wallet from "@/views/Wallet.vue";
+import Platform from "@/views/Platform.vue";
 import Identities from "@/views/Identities.vue";
 import Names from "@/views/Names.vue";
 import Contracts from "@/views/Contracts.vue";
@@ -13,6 +14,11 @@ const routes = [
     path: "/wallet",
     name: "wallet",
     component: Wallet,
+  },
+  {
+    path: "/platform",
+    name: "platform",
+    component: Platform,
   },
   {
     path: "/identities",

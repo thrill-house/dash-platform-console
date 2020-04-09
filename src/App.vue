@@ -1,52 +1,22 @@
 <template>
   <v-app>
-    <v-navigation-drawer v-model="drawer" disable-resize-watcher app>
-      <v-list>
-        <v-list-item link :to="{ name: 'wallet' }">
-          <v-list-item-content>
-            <v-list-item-title>Wallet</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item :disabled="!hasWallet" link :to="{ name: 'identities' }">
-          <v-list-item-content>
-            <v-list-item-title>Identities</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item :disabled="!hasUserIdentities" link :to="{ name: 'names' }">
-          <v-list-item-content>
-            <v-list-item-title>Names</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item :disabled="!hasApplicationIdentities" link :to="{ name: 'contracts' }">
-          <v-list-item-content>
-            <v-list-item-title>Contracts</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item link :to="{ name: 'documents' }">
-          <v-list-item-content>
-            <v-list-item-title>Documents</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-      </v-list>
-    </v-navigation-drawer>
     <v-app-bar app>
-      <v-app-bar-nav-icon class="hidden-md-and-up" @click.stop="drawer = !drawer" />
-      <v-toolbar-title>Dash Platform Console</v-toolbar-title>
+      <a href="http://console.dashevo.io/">
+        <v-img
+          class="mx-2"
+          src="@/assets/dash-logo-large.png"
+          max-height="20"
+          max-width="68"
+          contain
+        ></v-img>
+      </a>
+      <v-toolbar-title class="hidden-xs-only">Platform Console</v-toolbar-title>
 
       <v-spacer />
 
-      <v-toolbar-items class="hidden-sm-and-down">
+      <v-toolbar-items>
         <v-btn class="ml-1" text :to="{ name: 'wallet' }">Wallet</v-btn>
-        <v-btn class="ml-1" :disabled="!hasWallet" text :to="{ name: 'identities' }"
-          >Identities</v-btn
-        >
-        <v-btn class="ml-1" :disabled="!hasUserIdentities" text :to="{ name: 'names' }"
-          >Names</v-btn
-        >
-        <v-btn class="ml-1" :disabled="!hasApplicationIdentities" text :to="{ name: 'contracts' }"
-          >Contracts</v-btn
-        >
-        <v-btn class="ml-1" text :to="{ name: 'documents' }">Documents</v-btn>
+        <v-btn class="ml-1" text :to="{ name: 'platform' }">Platform</v-btn>
       </v-toolbar-items>
       <v-progress-linear
         :active="isSyncing"
@@ -77,6 +47,18 @@
         </v-snackbar>
       </v-container>
     </v-content>
+    <v-footer padless>
+      <v-col class="text-center" cols="12">
+        {{ new Date().getFullYear() }} —
+        <strong
+          ><a
+            href="https://dashplatform.readme.io/docs/tutorial-connecting-to-evonet"
+            target="_blank"
+            >dash platform docs</a
+          ></strong
+        >
+      </v-col>
+    </v-footer>
   </v-app>
 </template>
 
@@ -102,7 +84,9 @@ export default {
     },
   },
   created() {
-    // this.$store.dispatch("initWallet");
+    // if (this.hasWallet) {
+    this.$store.dispatch("initWallet");
+    // }
     // this.$vuetify.theme.dark =
     //   window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
     this.$store.watch(
