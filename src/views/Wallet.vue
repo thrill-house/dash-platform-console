@@ -1,67 +1,88 @@
 <template>
   <div>
-    <v-card class="mx-auto mt-10" max-width="700">
-      <v-btn small absolute dark fab top right color="grey" @click="mnemonicDialog = true">
-        <v-icon>mdi-square-edit-outline</v-icon>
-      </v-btn>
-      <v-container>
-        <v-row>
-          <v-col>
-            <v-list-item>
-              <v-list-item-content>
-                <v-list-item-title class="headline mb-1">
-                  {{ balanceInDash }} Dash
-                  <v-icon @click="refreshWallet">mdi-refresh</v-icon>
-                </v-list-item-title>
-                <v-list-item-subtitle>{{ confirmedBalanceInDash }} confirmed</v-list-item-subtitle>
-                <v-list-item-subtitle
-                  >{{ unconfirmedBalanceInDash }} unconfirmed</v-list-item-subtitle
-                >
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>
-                <v-list-item-title class="headline mb-2">Receiving address</v-list-item-title>
-                <v-list-item-subtitle>
-                  <pre
-                    style="
-                      font-size: 1.2em;
-                    ">{{ getWallet.unusedAddress }}<v-icon @click="goToFaucet">mdi-water</v-icon></pre>
-                </v-list-item-subtitle>
-              </v-list-item-content>
-            </v-list-item>
-          </v-col>
-          <v-col style="text-align: center;">
-            <qrcode
-              :value="getWallet.unusedAddress"
-              :options="{ width: 200 }"
-              style="margin-top: -5px;"
-            ></qrcode>
-          </v-col>
-        </v-row>
-      </v-container>
+    <v-container fluid style="max-width: 900px;">
+      <v-card class="mx-auto">
+        <v-card-title>
+          <span class="headline">Wallet Status</span>
+        </v-card-title>
+        <v-card-text class="text-center">
+          <v-container v-if="!hasWallet"
+            ><v-btn x-large color="primary" class="ma-2" @click.stop="createMnemonic"
+              >Create Wallet</v-btn
+            ><v-btn x-large color="primary" class="ma-2" @click="showRestoreMnemonic"
+              >Restore Wallet</v-btn
+            >
+          </v-container>
+          <v-container v-if="hasWallet" fluid justify="center"
+            ><v-btn x-large class="ma-2" @click="backupMnemonic">Backup Wallet</v-btn
+            ><v-btn x-large class="ma-2" @click="forgetState">Forget Wallet</v-btn>
+          </v-container>
+        </v-card-text></v-card
+      >
+    </v-container>
+    <v-container fluid style="max-width: 900px;">
+      <v-card v-if="hasWallet" class="mx-auto mt-10">
+        <v-container>
+          <v-row>
+            <v-col>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title class="headline mb-1">
+                    {{ balanceInDash }} Dash
+                    <v-icon @click="refreshWallet">mdi-refresh</v-icon>
+                  </v-list-item-title>
+                  <v-list-item-subtitle
+                    >{{ confirmedBalanceInDash }} confirmed</v-list-item-subtitle
+                  >
+                  <v-list-item-subtitle
+                    >{{ unconfirmedBalanceInDash }} unconfirmed</v-list-item-subtitle
+                  >
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title class="headline mb-2">Receiving address</v-list-item-title>
+                  <v-list-item-subtitle>
+                    <pre
+                      style="
+                        font-size: 1.2em;
+                      ">{{ getWallet.unusedAddress }}<v-icon @click="goToFaucet">mdi-water</v-icon></pre>
+                  </v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+            </v-col>
+            <v-col style="text-align: center;">
+              <qrcode
+                :value="getWallet.unusedAddress"
+                :options="{ width: 200 }"
+                style="margin-top: -5px;"
+              ></qrcode>
+            </v-col>
+          </v-row>
+        </v-container>
 
-      <v-card-actions>
-        <v-row row d-flex nowrap justify="center" class="px-2">
-          <v-text-field
-            v-model="sendToAddress"
-            :error="!sendToAddressValid"
-            label="Send Dash to Address"
-            outlined
-            hint="Enter a valid Dash Address"
-          ></v-text-field>
-          <!-- <v-btn
+        <v-card-actions>
+          <v-row row d-flex nowrap justify="center" class="px-2">
+            <v-text-field
+              v-model="sendToAddress"
+              :error="!sendToAddressValid"
+              label="Send Dash to Address"
+              outlined
+              hint="Enter a valid Dash Address"
+            ></v-text-field>
+            <!-- <v-btn
             x-large
             :disabled="!sendToAddressValid"
             color="primary"
             @click="sendDashDialog = true"
           >Send</v-btn>-->
-        </v-row>
-      </v-card-actions>
-    </v-card>
-    <v-container class="mt-12">
-      <v-expansion-panels :accordion="true" :multiple="true" hover>
-        <v-expansion-panel>
+          </v-row>
+        </v-card-actions>
+      </v-card>
+    </v-container>
+    <v-container v-if="hasWallet" fluid style="max-width: 900px;">
+      <v-expansion-panels :accordion="true" :multiple="true" hover max-width="700px">
+        <v-expansion-panel max-width="700px">
           <v-expansion-panel-header>Addresses</v-expansion-panel-header>
           <v-expansion-panel-content>
             <v-card outlined>
@@ -129,28 +150,38 @@
     <v-dialog v-model="mnemonicDialog" persistent max-width="600px">
       <v-card>
         <v-card-title>
-          <span class="headline">Set Mnemonic</span>
+          <span class="headline">{{ mnemonicDialogTitle }}</span>
         </v-card-title>
         <v-card-text>
           <v-alert dense outlined color="blue">
             <div><strong>Important:</strong> Backup your recovery phrase or loose your coins!</div>
           </v-alert>
           <v-textarea
+            ref="mnemonic"
             v-model="mnemonicText"
-            label="12 word recovery phrase"
+            :label="mnemonicDialogLabel"
             auto-grow
             outlined
+            :loading="mnemonicDialogLoading"
+            :readonly="!mnemonicDialogIsRestore"
             rows="3"
-            :append-icon="mnemonicText ? ' ' : 'mdi-eye'"
             row-height="25"
-            @click:append="mnemonicText = getWallet.mnemonic"
+            :clearable="mnemonicDialogIsRestore"
+            clear-icon="mdi-backspace"
           ></v-textarea>
         </v-card-text>
         <v-card-actions>
           <v-btn x-large @click="mnemonicDialog = false">Close</v-btn>
           <v-spacer></v-spacer>
-          <v-btn x-large color="primary" @click="changeMnemonic"
-            >{{ mnemonicText ? "Change" : "Generate" }} Mnemonic</v-btn
+          <v-btn v-if="mnemonicDialogIsRestore" x-large color="primary" @click="restoreMnemonic"
+            >Restore Wallet</v-btn
+          >
+          <v-btn
+            v-if="!mnemonicDialogIsRestore"
+            x-large
+            color="primary"
+            @click="copyMnemonicToClipboard"
+            >Copy Passphrase</v-btn
           >
         </v-card-actions>
       </v-card>
@@ -219,11 +250,15 @@ export default {
       sendToAmount: null,
       dialog: true,
       mnemonicDialog: false,
+      mnemonicDialogIsRestore: false,
+      mnemonicDialogTitle: "Create Mnemonic",
+      mnemonicDialogLabel: "Generating Wallet ..",
+      mnemonicDialogLoading: true,
       mnemonicText: "",
     };
   },
   computed: {
-    ...mapGetters(["getWallet", "identityLists", "isSyncing", "isError"]),
+    ...mapGetters(["hasWallet", "getWallet", "identityLists", "isSyncing", "isError"]),
     sendDashDialog() {
       if (this.sendToAddressValid && this.sendToAddress != "") {
         return true;
@@ -260,20 +295,68 @@ export default {
     },
   },
   methods: {
-    ...mapActions(["searchDashNames", "sendDash", "setMnemonic"]),
+    ...mapActions(["searchDashNames", "sendDash", "setMnemonic", "setSyncing"]),
     refreshWallet() {
       this.$store.dispatch("refreshWallet");
     },
     goToFaucet() {
       window.open("http://devnet-evonet-28309188.us-west-2.elb.amazonaws.com/", "_blank");
     },
-    async changeMnemonic() {
-      const mnemonic = this.mnemonicText ? this.mnemonicText : null;
+    async forgetState() {
+      this.mnemonicText = "";
+      this.$store.commit("resetState");
+    },
+    async copyMnemonicToClipboard() {
+      let mnemonic = this.$refs.mnemonic.$el.querySelector("textarea");
+      mnemonic.select();
+      document.execCommand("copy");
+      window.getSelection().removeAllRanges();
+    },
+    async showCreateMnemonic(ms) {
+      return new Promise((resolve) => {
+        this.mnemonicDialogLabel = "Generating wallet ..";
+        this.mnemonicDialogLoading = true;
+        this.mnemonicDialog = true;
+        this.mnemonicDialogTitle = "Create Mnemonic";
+        this.mnemonicDialogIsRestore = false;
+        setTimeout(resolve, ms);
+      });
+    },
+    async createMnemonic() {
+      // Delay needed so viewport doesn't freeze up
+      this.setSyncing(true);
+      this.showCreateMnemonic(200).then(async () => {
+        this.$store.commit("resetState");
+        await this.$store.dispatch("initWallet");
+        this.mnemonicText = this.getWallet.mnemonic;
+        this.mnemonicDialogLabel = "Wallet";
+        this.mnemonicDialogLoading = false;
+      });
+    },
+    async backupMnemonic() {
+      this.mnemonicDialog = true;
+      this.mnemonicDialogTitle = "Backup Mnemonic";
+      this.mnemonicDialogLabel = "Wallet";
+      this.mnemonicDialogIsRestore = false;
+      this.mnemonicDialogLoading = false;
+      this.mnemonicText = this.getWallet.mnemonic;
+    },
+    async showRestoreMnemonic() {
+      this.mnemonicDialog = true;
+      this.mnemonicDialogTitle = "Restore Mnemonic";
+      this.mnemonicDialogLabel = "Enter your 12 word recovery phrase";
+      this.mnemonicDialogLoading = false;
+      this.mnemonicDialogIsRestore = true;
+    },
+    async restoreMnemonic() {
+      this.mnemonicDialogLoading = true;
+      const mnemonic = this.mnemonicText;
       console.log(mnemonic);
       this.$store.commit("resetState");
       this.$store.commit("setMnemonic", mnemonic);
       await this.$store.dispatch("initWallet");
       this.mnemonicText = this.getWallet.mnemonic;
+      this.mnemonicDialogLoading = false;
     },
     submitSendDash(event) {
       event.stopImmediatePropagation();

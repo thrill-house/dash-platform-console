@@ -7,17 +7,17 @@
             <v-list-item-title>Wallet</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link :to="{ name: 'identities' }">
+        <v-list-item :disabled="!hasWallet" link :to="{ name: 'identities' }">
           <v-list-item-content>
             <v-list-item-title>Identities</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link :to="{ name: 'names' }">
+        <v-list-item :disabled="!hasUserIdentities" link :to="{ name: 'names' }">
           <v-list-item-content>
             <v-list-item-title>Names</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link :to="{ name: 'contracts' }">
+        <v-list-item :disabled="!hasApplicationIdentities" link :to="{ name: 'contracts' }">
           <v-list-item-content>
             <v-list-item-title>Contracts</v-list-item-title>
           </v-list-item-content>
@@ -37,9 +37,15 @@
 
       <v-toolbar-items class="hidden-sm-and-down">
         <v-btn class="ml-1" text :to="{ name: 'wallet' }">Wallet</v-btn>
-        <v-btn class="ml-1" text :to="{ name: 'identities' }">Identities</v-btn>
-        <v-btn class="ml-1" text :to="{ name: 'names' }">Names</v-btn>
-        <v-btn class="ml-1" text :to="{ name: 'contracts' }">Contracts</v-btn>
+        <v-btn class="ml-1" :disabled="!hasWallet" text :to="{ name: 'identities' }"
+          >Identities</v-btn
+        >
+        <v-btn class="ml-1" :disabled="!hasUserIdentities" text :to="{ name: 'names' }"
+          >Names</v-btn
+        >
+        <v-btn class="ml-1" :disabled="!hasApplicationIdentities" text :to="{ name: 'contracts' }"
+          >Contracts</v-btn
+        >
         <v-btn class="ml-1" text :to="{ name: 'documents' }">Documents</v-btn>
       </v-toolbar-items>
       <v-progress-linear
@@ -82,10 +88,21 @@ export default {
     return { drawer: false, welcome: true, snackbar: { show: false, text: "" } };
   },
   computed: {
-    ...mapGetters(["isSyncing"]),
+    ...mapGetters([
+      "isSyncing",
+      "userIdentitiesWithNames",
+      "applicationIdentitiesWithContracts",
+      "hasWallet",
+    ]),
+    hasUserIdentities() {
+      return Boolean(this.userIdentitiesWithNames.length);
+    },
+    hasApplicationIdentities() {
+      return Boolean(this.applicationIdentitiesWithContracts.length);
+    },
   },
   created() {
-    this.$store.dispatch("initWallet");
+    // this.$store.dispatch("initWallet");
     // this.$vuetify.theme.dark =
     //   window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
     this.$store.watch(

@@ -8,7 +8,7 @@ const DashJS = require("dash");
 
 let client;
 const initState = {
-  isSyncing: true,
+  isSyncing: false,
   wallet: {
     // mnemonic: "become leisure project merry rebuild forest bread foot during orange august raw",
     // mnemonic: "control toe garage transfer shrimp pill wear detail ribbon only unveil nephew",
@@ -335,6 +335,9 @@ export default new Vuex.Store({
     getWallet(state) {
       const { wallet } = state;
       return wallet;
+    },
+    hasWallet(state) {
+      return Boolean(state.wallet.mnemonic);
     },
     identityLists(state) {
       const { identities } = state;
