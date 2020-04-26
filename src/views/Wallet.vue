@@ -358,7 +358,7 @@ export default {
       }, 1000);
     },
     goToFaucet() {
-      window.open("http://devnet-evonet-28309188.us-west-2.elb.amazonaws.com/", "_blank");
+      window.open("http://faucet.evonet.networks.dash.org/", "_blank");
     },
     async forgetState() {
       this.mnemonicText = "";

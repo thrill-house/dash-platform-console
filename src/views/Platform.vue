@@ -6,62 +6,37 @@
           ref="selectedid"
           v-model="selectedIdentity"
           :items="comboIdentities"
-          label="Search Names, paste ContractId"
+          label="Search Names, paste DashIdentity or ContractId"
           outlined
           autofocus
           color="blue"
           class="mr-2"
           @change="awesomeBar"
         ></v-combobox>
-        <v-speed-dial
-          v-model="fab"
+        <v-btn
+          fab
           top
           right
-          direction="bottom"
-          class="mt-n4"
+          color="primary"
           style="z-index: 4; left: 0px;"
+          @click="createIdentity()"
         >
-          <template v-slot:activator>
-            <v-btn v-model="fab" fab @click="clearIdentity()" @blur="closeFab()">
-              <v-icon v-if="fab">mdi-close</v-icon>
-              <v-icon v-else>mdi-plus</v-icon>
-            </v-btn>
-          </template>
-          <v-tooltip left>
-            <template v-slot:activator="{ on }">
-              <v-btn fab @click="createIdentity({ name: 'user', value: 1 })" v-on="on">
-                <v-icon color="primary" dark>mdi-account</v-icon>
-              </v-btn>
-            </template>
-            <span>New User</span>
-          </v-tooltip>
-          <v-tooltip left>
-            <template v-slot:activator="{ on }">
-              <v-btn fab @click="createIdentity({ name: 'application', value: 2 })" v-on="on">
-                <v-icon color="primary" dark>mdi-code-json</v-icon>
-              </v-btn>
-            </template>
-            <span>New App</span>
-          </v-tooltip>
-        </v-speed-dial>
+          <v-icon>mdi-plus</v-icon>
+        </v-btn>
       </v-col>
     </v-row>
     <v-row
-      v-if="
-        selectedIdentity.type === 'application' &&
-        selectedIdentity.value &&
-        !contracts[selectedIdentity.value]
-      "
+      v-if="selectedIdentity.value && !contracts[selectedIdentity.value]"
       align="center"
       justify="center"
     >
       <v-col>
         <v-card class="mx-auto">
           <v-card-title>
-            <span class="headline">Register a Contract</span>
+            <span class="headline">Contracts</span>
           </v-card-title>
-          <v-card-text class="text-center">
-            Here @andyfreer explains the new dev what to know and do about contracts
+          <v-card-text class="text-center subtitle-1">
+            Your Dash Identity is <code>{{ selectedIdentity.value }}</code>
           </v-card-text>
           <v-card-actions class="text-center">
             <Contract :identity="selectedIdentity" />
@@ -69,42 +44,44 @@
         </v-card> </v-col
     ></v-row>
     <v-row
-      v-if="
-        selectedIdentity.type === 'application' &&
-        selectedIdentity.value &&
-        contracts[selectedIdentity.value]
-      "
+      v-if="selectedIdentity.value && contracts[selectedIdentity.value]"
       align="center"
       justify="center"
     >
-      <v-col> <Documents :selected-contract-id="selectedIdentity.value" /> </v-col
+      <v-col> <Documents :selected-identity-id="selectedIdentity.value" /> </v-col
     ></v-row>
-    <v-row v-if="showMyUsers">
-      <v-col class="d-flex">
-        <v-text-field
-          v-model="newUsername"
-          outlined
-          label="Choose your new username"
-          @keydown.enter="createUsername"
-        />
-        <v-btn color="primary" x-large @click="createUsername()">Register</v-btn>
-      </v-col>
-    </v-row>
-    <v-row>
+    <v-row v-if="selectedIdentity.value" align="center" justify="center">
       <v-col>
-        <v-chip
-          v-for="(name, i) in names[selectedIdentity.value]"
-          :key="i"
-          class="ma-4"
-          pill
-          color="blue"
-          text-color="white"
-        >
-          <v-avatar left>
-            <v-icon>mdi-account-circle</v-icon>
-          </v-avatar>
-          {{ name }}
-        </v-chip>
+        <v-card class="mx-auto">
+          <v-card-title>
+            <span class="headline">Users</span>
+          </v-card-title>
+          <v-card-text class="text-center subtitle-1">
+            Your Dash Usernames are:
+            <v-chip
+              v-for="(name, i) in names[selectedIdentity.value]"
+              :key="i"
+              class="ma-4"
+              pill
+              color="blue"
+              text-color="white"
+            >
+              <v-avatar left>
+                <v-icon>mdi-account-circle</v-icon>
+              </v-avatar>
+              {{ name }}
+            </v-chip>
+          </v-card-text>
+          <v-card-actions class="text-center">
+            <v-text-field
+              v-model="newUsername"
+              outlined
+              label="Choose your new username"
+              @keydown.enter="createUsername"
+            />
+            <v-btn color="primary" class="mt-n8" x-large @click="createUsername()">Register</v-btn>
+          </v-card-actions>
+        </v-card>
       </v-col></v-row
     >
     <v-row v-if="showUserSearchTable">
@@ -114,13 +91,13 @@
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Identity Id</th>
+                <th>Dash Identity</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(user, i) in searchDashNameList" :key="i">
                 <td>{{ user.label }}</td>
-                <td>{{ user.userId }}</td>
+                <td>{{ user.dashIdentity }}</td>
               </tr>
             </tbody>
           </v-simple-table>
@@ -159,10 +136,8 @@ export default {
       let comboIds = [];
 
       // Identities our mnemonic owns
-      comboIds.push({ header: "My App identities" });
-      comboIds = comboIds.concat(this.applicationIdentities);
-      comboIds.push({ header: "My Users identities" });
-      comboIds = comboIds.concat(this.userIdentities);
+      comboIds.push({ header: "My Identities" });
+      comboIds = comboIds.concat(this.$store.state.identities.map((identity) => identity.id));
 
       // ContractIds from 3rd parties (our duplicates won't be shown in the combobox)
       comboIds.push({ header: "3rd Party Contracts (paste to import)" });
@@ -180,7 +155,6 @@ export default {
     },
     showMyUsers() {
       const { selectedIdentity } = this;
-      console.log(selectedIdentity.type);
       return Boolean(selectedIdentity.type === "user");
     },
   },
@@ -213,28 +187,35 @@ export default {
           this.$store.commit("setSyncing", false);
         });
     },
-    isContractId(value) {
+    isIdentityId(value) {
       return typeof value === "string" && value.length === 44;
     },
     async awesomeBar() {
-      const { contracts, selectedIdentity, isContractId } = this;
+      const { contracts, selectedIdentity, isIdentityId } = this;
+      console.log(selectedIdentity);
       if (typeof selectedIdentity === "string" && selectedIdentity.length > 0) {
-        if (isContractId(selectedIdentity)) {
+        // Don't react on empty input
+        if (isIdentityId(selectedIdentity)) {
+          // Either load identity actions or launch a name search
+          console.log("contract", contracts);
           const contract = contracts[selectedIdentity.value];
           console.log(contract);
-          console.log(this.isContractId(selectedIdentity));
+          console.log("isContract", this.isIdentityId(selectedIdentity));
           if (
             !contract &&
             typeof this.selectedIdentity === "string" &&
-            this.selectedIdentity.length > 5
+            this.selectedIdentity.length > 5 // FIXME should be 44? can probably remove
           ) {
+            // If awesomebar input is selected, it's an object: selectedIdentity === {value: , text:}
+            // Here it is direct input as text: typeof selectedIdentity === 'string'
             console.log("fetching unknown contract and adding to state");
-            console.log({ identifier: selectedIdentity });
-            await this.addContract({ identifier: selectedIdentity });
+            console.log({ contractId: selectedIdentity });
+            await this.addContract({ contractId: selectedIdentity });
+
+            // Set awesomebar entry to object, now it will be loaded from cache upon next select
             this.selectedIdentity = {
               text: selectedIdentity,
               value: selectedIdentity,
-              type: "application",
             };
             console.log("done fetching unknown contract and adding to state");
           }
@@ -252,17 +233,16 @@ export default {
     clearIdentity() {
       this.selectedIdentity = { text: "", value: null };
     },
-    createIdentity(type) {
+    createIdentity() {
       this.$store.commit("setSyncing", true);
       this.$store
-        .dispatch("createIdentity", type)
+        .dispatch("createIdentity")
         .then(() => {
           // If successful, set the newly created identity in the combobox
-          const identity = this.$store.state.identities[type.name].slice(-1)[0]; // FIXME should be a getter
+          const identity = this.$store.state.identities.slice(-1)[0];
           this.selectedIdentity = {
             text: identity.id,
             value: identity.id,
-            type: identity.type === 2 ? "application" : "user",
           };
         })
         .catch((e) => {

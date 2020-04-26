@@ -184,7 +184,7 @@ import "brace/theme/clouds_midnight";
 
 export default {
   components: { AceEditor },
-  props: ["selectedContractId"],
+  props: ["selectedIdentityId"],
   data() {
     return {
       snackbar: false,
@@ -217,15 +217,16 @@ export default {
   computed: {
     ...mapGetters(["contracts", "documents"]),
     contractIds() {
-      return Object.keys(this.contracts);
+      return Object.keys(this.contracts[this.selectedIdentityId]);
     },
     documentProperties() {
       const { contracts, selectedContractId } = this;
-      console.log(contracts[selectedContractId]);
+      console.log("cc", contracts[selectedContractId]);
       const properties = [];
-      if (this.selectedContract[this.selectedDocumentType]) {
-        console.log(this.selectedContract[this.selectedDocumentType]);
-        const { indices } = this.selectedContract[this.selectedDocumentType];
+      console.log("ts", this.selectedContract);
+      if (this.selectedContract.documents[this.selectedDocumentType]) {
+        console.log(this.selectedContract.documents[this.selectedDocumentType]);
+        const { indices } = this.selectedContract.documents[this.selectedDocumentType];
         let i;
         for (i in indices) {
           console.log(i);
@@ -243,10 +244,18 @@ export default {
       console.log(properties);
       return properties;
     },
-    selectedContract() {
-      const { contracts, selectedContractId } = this;
+    selectedContractId() {
+      console.log("sii", this.selectedIdentityId);
 
-      const contract = contracts[selectedContractId];
+      const idContracts = this.contracts[this.selectedIdentityId];
+      const contractIdsForIdentity = Object.keys(idContracts);
+      console.log("selectedContractId", contractIdsForIdentity[0]);
+      return contractIdsForIdentity[0];
+    },
+    selectedContract() {
+      const { contracts, selectedContractId, selectedIdentityId } = this;
+
+      const contract = contracts[selectedIdentityId][selectedContractId];
       if (!contract) {
         this.addContract({ identifier: selectedContractId });
         console.log("fetching unknown contract and adding to state");
@@ -268,7 +277,7 @@ export default {
     documentTypes() {
       let types = [];
       if (this.selectedContractId) {
-        types = Object.keys(this.selectedContract);
+        types = Object.keys(this.selectedContract.documents);
       }
       // eslint-disable-next-line
       this.selectedDocumentType = types[0]; // oh so hackisch FIXME
@@ -351,9 +360,10 @@ export default {
       }
     },
     submit() {
-      const { json, selectedContractId, selectedDocumentType } = this;
+      const { json, selectedIdentityId, selectedContractId, selectedDocumentType } = this;
       this.submitting = true;
       this.submitDocument({
+        identityId: selectedIdentityId,
         contractId: selectedContractId,
         type: selectedDocumentType,
         json: JSON.parse(json.toString()),

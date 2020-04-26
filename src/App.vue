@@ -4,9 +4,9 @@
       <a href="http://console.dashevo.io/">
         <v-img
           class="mx-2"
-          src="@/assets/dash-logo-large.png"
-          max-height="20"
-          max-width="68"
+          src="@/assets/d-logo-large.png"
+          max-height="56"
+          max-width="40"
           contain
         ></v-img>
       </a>
