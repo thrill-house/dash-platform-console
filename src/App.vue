@@ -4,9 +4,9 @@
       <a href="http://console.dashevo.io/">
         <v-img
           class="mx-2"
-          src="@/assets/dash-logo-large.png"
-          max-height="20"
-          max-width="68"
+          src="@/assets/d-logo-large.png"
+          max-height="56"
+          max-width="40"
           contain
         ></v-img>
       </a>
@@ -63,8 +63,8 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
-
+// eslint-disable-next-line
+import { mapGetters } from "vuex"; //hi
 export default {
   data() {
     return { drawer: false, welcome: true, snackbar: { show: false, text: "" } };

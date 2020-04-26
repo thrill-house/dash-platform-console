@@ -16,16 +16,15 @@ const initState = {
     // vendor inch curtain admit tumble open arch strong segment wrestle head earth
     // mnemonic: "snack immune develop side proof air dune melt replace cover apology joke",
     // snack immune develop side proof air dune melt replace cover apology joke
+    // AReTHBxAzKbdqx3ZJyX94gNW4xhyjEDkWwVWcfAK7X9m
+    //drastic raise hurry step always person bundle end humble toss estate inner
     mnemonic: undefined,
     confirmedBalance: 0,
   },
   errorDetails: null,
   isError: false,
   snackError: { show: false, text: "" },
-  identities: {
-    user: [],
-    application: [],
-  },
+  identities: [],
   names: {},
   searchNames: [],
   contracts: {},
@@ -46,8 +45,8 @@ export const identityTypes = {
 export default new Vuex.Store({
   state: initState,
   mutations: {
-    addIdentity(state, { identity, type }) {
-      state.identities[type.name].push(identity);
+    addIdentity(state, { identity }) {
+      state.identities.push(identity);
     },
     setWallet(state, wallet) {
       state.wallet = wallet;
@@ -64,15 +63,14 @@ export default new Vuex.Store({
       const { id } = identity;
       state.contracts = {
         ...state.contracts,
-        [id]: contract.documents,
+        [id]: { [contract.id]: contract },
       };
     },
-    addDocument(state, { identity, document }) {
-      const { id } = identity;
-      state.documents = {
-        ...state.documents,
-        [id]: { ...state.documents[id], [document.entropy]: document },
-      };
+    addDocument(state, { document }) {
+      const contractId = document.dataContractId;
+
+      if (!state.documents[contractId]) state.documents[contractId] = [];
+      state.documents[contractId].push(document);
     },
     setDocuments(state, { contractId, documents }) {
       state.documents = {
@@ -101,6 +99,7 @@ export default new Vuex.Store({
     },
     resetState() {
       this.replaceState(JSON.parse(JSON.stringify(initState)));
+      this.dispatch("initWallet");
     },
     resetSync(state) {
       state.isSyncing = true;
@@ -109,17 +108,22 @@ export default new Vuex.Store({
     },
   },
   actions: {
-    async addContract({ commit }, { identifier }) {
-      console.log("id", identifier);
+    async addContract({ commit }, { contractId }) {
+      console.log({ contractId });
       const { platform } = client;
       commit("setSyncing", true);
-      const contract = await platform.contracts.get(identifier);
-      console.log(contract);
-      const identity = { id: identifier };
+      const contract = await platform.contracts.get(contractId);
+      console.log("fetched contract", contract);
+      const identity = { id: contract.id };
       console.dir({ contract });
 
-      if (contract === null) console.log("looks like its null");
-      commit("addContract", { identity, contract });
+      if (contract === null) {
+        console.log("contract is null for this identity");
+      } else {
+        console.log("found a contract, adding");
+        commit("addContract", { identity, contract });
+      }
+
       commit("setSyncing", false);
     },
     async sendDash({ dispatch }, { sendToAddress, satoshis }) {
@@ -138,19 +142,24 @@ export default new Vuex.Store({
         throw e;
       }
     },
-    async queryDocuments(
-      { commit, dispatch },
-      {
-        contractId,
-        // typeLocator,
-        queryOpts,
-      }
-    ) {
+    async queryDocuments({ commit, dispatch }, { contractId, typeLocator, queryOpts }) {
       console.log(queryOpts);
       commit("setSyncing", true);
       try {
+        const clientOpts = {
+          network: "testnet",
+          apps: {
+            tutorialContract: {
+              contractId,
+            },
+          },
+        };
+        const client = new DashJS.Client(clientOpts);
         await client.isReady();
-        const documents = await client.platform.documents.get("dpns.domain", queryOpts); // TODO change dpns domain to contract id
+        const documents = await client.platform.documents.get(
+          `tutorialContract${typeLocator}`,
+          queryOpts
+        );
         commit("setDocuments", { contractId, documents });
         commit("setSyncing", false);
       } catch (e) {
@@ -171,17 +180,18 @@ export default new Vuex.Store({
       };
       try {
         const searchNames = await client.platform.documents.get("dpns.domain", queryOpts);
+        console.log({ searchNames });
         commit("setSearchNames", searchNames);
       } catch (e) {
         dispatch("showSnackError", e);
         console.error("Something went wrong:", e);
       }
     },
-    async createIdentity({ commit, dispatch }, type) {
+    async createIdentity({ commit, dispatch }) {
       try {
-        const identityId = await client.platform.identities.register(type.name);
-        const identity = await client.platform.identities.get(identityId);
-        commit("addIdentity", { identity, type });
+        await client.isReady();
+        const identity = await client.platform.identities.register();
+        commit("addIdentity", { identity });
       } catch (e) {
         dispatch("showSnackError", e);
         console.log(e);
@@ -207,6 +217,9 @@ export default new Vuex.Store({
       try {
         let identity = await platform.identities.get(identityId);
         const contract = await platform.contracts.create(json, identity);
+        console.log({ contract });
+        // Make sure contract passes validation checks
+        await platform.dpp.dataContract.validate(contract);
         await platform.contracts.broadcast(contract, identity);
         commit("addContract", { identity, contract });
       } catch (e) {
@@ -214,35 +227,45 @@ export default new Vuex.Store({
         console.error("Something went wrong:", e);
       }
     },
-    async submitDocument({ commit, dispatch }, { contractId, type, json }) {
-      console.log(contractId);
-      console.log(json);
+    async submitDocument({ commit, dispatch }, { identityId, contractId, type, json }) {
+      console.log("submitting document");
+      console.log({ identityId });
+      console.log({ contractId });
+      console.log({ json });
 
-      const sdkAppsOpts = {
+      const clientAppsOpts = {
         network: "testnet",
         mnemonic: this.state.wallet.mnemonic,
         apps: {
-          contractExample: {
+          tutorialContract: {
             contractId,
           },
         },
       };
-      console.log("second dashjs client opts", sdkAppsOpts);
-      const sdkApps = new DashJS.Client(sdkAppsOpts);
+      console.log("second dashjs client opts", clientAppsOpts);
 
+      const sdkApps = new DashJS.Client(clientAppsOpts);
       const { platform } = sdkApps;
       await sdkApps.isReady();
 
       try {
-        const identity = await platform.identities.get(contractId);
+        const identity = await platform.identities.get(identityId);
 
         // Create the note document
-        const document = await platform.documents.create(`contractExample.${type}`, identity, json);
-
-        console.log(document);
+        const document = await platform.documents.create(
+          `tutorialContract.${type}`,
+          identity,
+          json
+        );
+        const documentBatch = {
+          create: [document],
+          replace: [],
+          delete: [],
+        };
+        console.log({ document });
         // Sign and submit the document
-        await platform.documents.broadcast(document, identity);
-        commit("addDocument", { identity, document });
+        await platform.documents.broadcast(documentBatch, identity);
+        commit("addDocument", { identity, document }); // FIXME next under contractId
       } catch (e) {
         dispatch("showSnackError", e);
         console.error("Something went wrong:", e);
@@ -273,11 +296,6 @@ export default new Vuex.Store({
         client = new DashJS.Client({
           network: "testnet",
           mnemonic,
-          apps: {
-            dpns: {
-              contractId: "77w8Xqn25HwJhjodrHW133aXhjuTsTv9ozQaYpSHACE3",
-            },
-          },
         });
         // const onReceivedTransaction = function (data) {
         //   const { account } = client;
@@ -287,9 +305,9 @@ export default new Vuex.Store({
         // };
         // client.account.on("FETCHED/UNCONFIRMED_TRANSACTION", onReceivedTransaction);
         await client.isReady().then(async () => {
-          dispatch("refreshWallet");
+          if (typeof mnemonic !== "undefined") dispatch("refreshWallet");
           setInterval(function () {
-            console.log(getters.hasWallet);
+            // console.log(getters.hasWallet);
             if (getters.hasWallet) dispatch("refreshWallet");
           }, 5000);
           console.dir({ client }, { depth: 5 });
@@ -340,7 +358,7 @@ export default new Vuex.Store({
         // console.log("Funding address", account.getUnusedAddress());
         // console.log("Confirmed Balance", account.getConfirmedBalance());
         // console.log("Unconfirmed Balance", account.getUnconfirmedBalance());
-        console.log("Total Balance", account.getTotalBalance());
+        // console.log("Total Balance", account.getTotalBalance());
         // console.log("Mnemonic", mnemonic);
         // console.log("getAccount", wallet.getAccount());
       } catch (e) {
@@ -413,7 +431,7 @@ export default new Vuex.Store({
       const { searchNames } = state;
       return searchNames.map((document) => ({
         label: document.label,
-        userId: document.$userId,
+        dashIdentity: document.records.dashIdentity,
       }));
     },
     applicationIdentitiesWithContracts(state) {
