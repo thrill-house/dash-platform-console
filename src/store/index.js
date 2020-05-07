@@ -112,9 +112,6 @@ export default new Vuex.Store({
       console.log({ contractId });
       const { platform } = client;
       commit("setSyncing", true);
-      platform.contracts.get("H9FoASn9drvHku9cooX9gyMbvGC3UD5q25SDVA99nhVz").then((contract) => {
-        console.dir({ contract }, { depth: 5 });
-      });
       const contract = await platform.contracts.get(contractId);
       console.log("fetched contract", contract);
       const identity = { id: contract.id };
