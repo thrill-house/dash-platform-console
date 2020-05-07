@@ -63,8 +63,8 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
-
+// eslint-disable-next-line
+import { mapGetters } from "vuex"; //hi
 export default {
   data() {
     return { drawer: false, welcome: true, snackbar: { show: false, text: "" } };
