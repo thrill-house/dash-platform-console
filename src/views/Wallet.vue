@@ -58,9 +58,8 @@
                 <v-list-item-content>
                   <v-list-item-title class="headline mb-2"
                     >Receiving address
-
                     <v-tooltip v-model="addressCopied" right>
-                      <template>
+                      <template v-slot:activator="notneeded">
                         <v-icon class="ml-1 mt-n1" @click="copyReceivingAddressToClipboard"
                           >mdi-clipboard-multiple-outline</v-icon
                         >
