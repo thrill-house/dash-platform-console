@@ -142,14 +142,7 @@ export default new Vuex.Store({
         throw e;
       }
     },
-    async queryDocuments(
-      { commit, dispatch },
-      {
-        contractId,
-        // typeLocator,
-        queryOpts,
-      }
-    ) {
+    async queryDocuments({ commit, dispatch }, { contractId, typeLocator, queryOpts }) {
       console.log(queryOpts);
       commit("setSyncing", true);
       try {
@@ -163,7 +156,10 @@ export default new Vuex.Store({
         };
         const client = new DashJS.Client(clientOpts);
         await client.isReady();
-        const documents = await client.platform.documents.get("tutorialContract.note", queryOpts);
+        const documents = await client.platform.documents.get(
+          `tutorialContract${typeLocator}`,
+          queryOpts
+        );
         commit("setDocuments", { contractId, documents });
         commit("setSyncing", false);
       } catch (e) {
