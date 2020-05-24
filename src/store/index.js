@@ -59,11 +59,13 @@ export default new Vuex.Store({
         [id]: [...names, name],
       };
     },
-    addContract(state, { identity, contract }) {
-      const { id } = identity;
+    addContract(state, contract) {
+      const identityId = contract.ownerId;
+      const contractId = contract.id;
+
       state.contracts = {
         ...state.contracts,
-        [id]: { [contract.id]: contract },
+        [identityId]: { [contractId]: contract },
       };
     },
     addDocument(state, { document }) {
@@ -99,7 +101,7 @@ export default new Vuex.Store({
     },
     resetState() {
       this.replaceState(JSON.parse(JSON.stringify(initState)));
-      this.dispatch("initWallet");
+      this.dispatch("initWallet"); // FIXME this shouldn't be in a mutation
     },
     resetSync(state) {
       state.isSyncing = true;
@@ -114,17 +116,19 @@ export default new Vuex.Store({
       commit("setSyncing", true);
       const contract = await platform.contracts.get(contractId);
       console.log("fetched contract", contract);
-      const identity = { id: contract.id };
       console.dir({ contract });
 
       if (contract === null) {
         console.log("contract is null for this identity");
+        commit("setSyncing", false);
+        return false;
       } else {
         console.log("found a contract, adding");
-        commit("addContract", { identity, contract });
+        console.log({ contract });
+        commit("addContract", contract);
+        commit("setSyncing", false);
+        return contract;
       }
-
-      commit("setSyncing", false);
     },
     async sendDash({ dispatch }, { sendToAddress, satoshis }) {
       const { account } = client;
@@ -143,23 +147,39 @@ export default new Vuex.Store({
       }
     },
     async queryDocuments({ commit, dispatch }, { contractId, typeLocator, queryOpts }) {
-      console.log(queryOpts);
+      console.log("queryDocuments()");
+      console.log({ contractId });
+      console.log({ typeLocator });
+      console.log({ queryOpts });
       commit("setSyncing", true);
       try {
-        const clientOpts = {
+        const clientOptsQuery = {
+          seeds: [
+            { service: "seed-1.evonet.networks.dash.org" },
+            { service: "seed-2.evonet.networks.dash.org" },
+            { service: "seed-3.evonet.networks.dash.org" },
+            { service: "seed-4.evonet.networks.dash.org" },
+            { service: "seed-5.evonet.networks.dash.org" },
+          ],
           network: "testnet",
           apps: {
+            dpns: {
+              contractId: "7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM",
+            },
             tutorialContract: {
               contractId,
             },
           },
         };
-        const client = new DashJS.Client(clientOpts);
-        await client.isReady();
-        const documents = await client.platform.documents.get(
-          `tutorialContract${typeLocator}`,
+        console.log({ clientOptsQuery });
+        const clientQuery = new DashJS.Client(clientOptsQuery);
+        await clientQuery.isReady();
+        const documents = await clientQuery.platform.documents.get(
+          `tutorialContract.${typeLocator}`,
           queryOpts
         );
+        clientQuery.disconnect();
+        console.log("Found documents: ", { documents });
         commit("setDocuments", { contractId, documents });
         commit("setSyncing", false);
       } catch (e) {
@@ -216,12 +236,35 @@ export default new Vuex.Store({
       console.log(identityId);
       try {
         let identity = await platform.identities.get(identityId);
+        const definitions = json.definitions;
+        delete json.definitions;
+        console.log("Creating contract with:");
+        console.log("JSON", json);
+        console.log("identity", identity);
         const contract = await platform.contracts.create(json, identity);
-        console.log({ contract });
+        console.log("Contract created", { contract });
+        console.log("contract.toJSON()", contract.toJSON());
+        console.log("contract.setDefinitions()");
+        contract.setDefinitions(definitions);
+        console.log("contract.toJSON()", contract.toJSON());
+
         // Make sure contract passes validation checks
-        await platform.dpp.dataContract.validate(contract);
-        await platform.contracts.broadcast(contract, identity);
-        commit("addContract", { identity, contract });
+        console.log("dataContract.validate()");
+        const validationResult = await platform.dpp.dataContract.validate(contract);
+
+        if (validationResult.isValid()) {
+          // If validation passed, broadcast contract
+
+          console.log("validation passed, broadcasting contract..");
+          await platform.contracts.broadcast(contract, identity);
+        } else {
+          // If validation errors exist, log to console and throw the first.
+
+          console.error(validationResult);
+          throw validationResult.errors[0];
+        }
+
+        commit("addContract", contract);
       } catch (e) {
         dispatch("showSnackError", e);
         console.error("Something went wrong:", e);
@@ -234,11 +277,21 @@ export default new Vuex.Store({
       console.log({ json });
 
       const clientAppsOpts = {
+        seeds: [
+          { service: "seed-1.evonet.networks.dash.org" },
+          { service: "seed-2.evonet.networks.dash.org" },
+          { service: "seed-3.evonet.networks.dash.org" },
+          { service: "seed-4.evonet.networks.dash.org" },
+          { service: "seed-5.evonet.networks.dash.org" },
+        ],
         network: "testnet",
         mnemonic: this.state.wallet.mnemonic,
         apps: {
           tutorialContract: {
             contractId,
+          },
+          dpns: {
+            contractId: "7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM",
           },
         },
       };
@@ -249,7 +302,9 @@ export default new Vuex.Store({
       await sdkApps.isReady();
 
       try {
+        console.log({ identityId });
         const identity = await platform.identities.get(identityId);
+        console.log({ identity });
 
         // Create the note document
         const document = await platform.documents.create(
@@ -294,8 +349,20 @@ export default new Vuex.Store({
 
         console.log("mnemonic is", mnemonic);
         client = new DashJS.Client({
+          seeds: [
+            { service: "seed-1.evonet.networks.dash.org" },
+            { service: "seed-2.evonet.networks.dash.org" },
+            { service: "seed-3.evonet.networks.dash.org" },
+            { service: "seed-4.evonet.networks.dash.org" },
+            { service: "seed-5.evonet.networks.dash.org" },
+          ],
           network: "testnet",
           mnemonic,
+          apps: {
+            dpns: {
+              contractId: "7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM",
+            },
+          },
         });
         // const onReceivedTransaction = function (data) {
         //   const { account } = client;
@@ -402,17 +469,23 @@ export default new Vuex.Store({
       return application.map((identity) => ({
         text: identity.id,
         value: identity.id,
-        type: "application",
+        identityId: identity.id,
       }));
     },
+    // TODO refactor, contractIdentities should be comboContracts and live in Platform.vue
     contractIdentities(state) {
       const { contracts } = state;
       console.log(contracts);
-      let n = Object.keys(contracts).map((identity) => ({
-        text: identity,
-        value: identity,
-        type: "application",
-      }));
+      let n = Object.keys(contracts).map(function (identityId) {
+        const contractId = Object.keys(contracts[identityId])[0]; // TODO support multiple contracts per identity
+
+        return {
+          text: contractId,
+          value: contractId,
+          contractId,
+          identityId,
+        };
+      });
       console.log("n", n);
       return n;
     },
@@ -445,7 +518,7 @@ export default new Vuex.Store({
     },
     contracts(state) {
       const { contracts } = state;
-      console.log(contracts);
+      console.log({ contracts });
       return contracts;
     },
     documents(state) {

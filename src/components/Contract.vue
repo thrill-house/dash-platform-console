@@ -49,7 +49,7 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["applicationIdentitiesWithContracts"]),
+    ...mapGetters(["applicationIdentitiesWithContracts", "contracts"]),
   },
   methods: {
     ...mapActions(["registerContract", "showSnackError"]),
