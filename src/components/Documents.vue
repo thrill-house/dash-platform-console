@@ -302,10 +302,10 @@ export default {
       const { limit, startAt } = queryModifiers;
       this.queryOpts = { limit, startAt };
 
-      const order = [];
-      if (orderBy1.property) order.push([orderBy1.property, orderBy1.direction]);
-      if (orderBy2.property) order.push([orderBy2.property, orderBy2.direction]);
-      this.queryOpts.order = order;
+      const orderBy = [];
+      if (orderBy1.property) orderBy.push([orderBy1.property, orderBy1.direction]);
+      if (orderBy2.property) orderBy.push([orderBy2.property, orderBy2.direction]);
+      this.queryOpts.orderBy = orderBy;
 
       const where = [];
       let i;
