@@ -147,8 +147,18 @@ export default new Vuex.Store({
       commit("setSyncing", true);
       try {
         const clientOpts = {
+          seeds: [
+            { service: "seed-1.evonet.networks.dash.org" },
+            { service: "seed-2.evonet.networks.dash.org" },
+            { service: "seed-3.evonet.networks.dash.org" },
+            { service: "seed-4.evonet.networks.dash.org" },
+            { service: "seed-5.evonet.networks.dash.org" },
+          ],
           network: "testnet",
           apps: {
+            dpns: {
+              contractId: "7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM",
+            },
             tutorialContract: {
               contractId,
             },
@@ -157,7 +167,7 @@ export default new Vuex.Store({
         const client = new DashJS.Client(clientOpts);
         await client.isReady();
         const documents = await client.platform.documents.get(
-          `tutorialContract${typeLocator}`,
+          `tutorialContract.${typeLocator}`,
           queryOpts
         );
         commit("setDocuments", { contractId, documents });
@@ -234,11 +244,21 @@ export default new Vuex.Store({
       console.log({ json });
 
       const clientAppsOpts = {
+        seeds: [
+          { service: "seed-1.evonet.networks.dash.org" },
+          { service: "seed-2.evonet.networks.dash.org" },
+          { service: "seed-3.evonet.networks.dash.org" },
+          { service: "seed-4.evonet.networks.dash.org" },
+          { service: "seed-5.evonet.networks.dash.org" },
+        ],
         network: "testnet",
         mnemonic: this.state.wallet.mnemonic,
         apps: {
           tutorialContract: {
             contractId,
+          },
+          dpns: {
+            contractId: "7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM",
           },
         },
       };
@@ -294,8 +314,20 @@ export default new Vuex.Store({
 
         console.log("mnemonic is", mnemonic);
         client = new DashJS.Client({
+          seeds: [
+            { service: "seed-1.evonet.networks.dash.org" },
+            { service: "seed-2.evonet.networks.dash.org" },
+            { service: "seed-3.evonet.networks.dash.org" },
+            { service: "seed-4.evonet.networks.dash.org" },
+            { service: "seed-5.evonet.networks.dash.org" },
+          ],
           network: "testnet",
           mnemonic,
+          apps: {
+            dpns: {
+              contractId: "7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM",
+            },
+          },
         });
         // const onReceivedTransaction = function (data) {
         //   const { account } = client;
