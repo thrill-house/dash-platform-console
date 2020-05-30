@@ -129,14 +129,13 @@ export default {
       "searchDashNameList",
     ]),
     selectedIdentityHasContracts() {
-      if (this.selectedIdentity && this.selectedIdentity.identityId) {
-        console.log("this.selectedIdentity", this.selectedIdentity);
-        const identityId = this.selectedIdentity.identityId;
-        
-        console.log("contracts:", this.contracts);
-        const identityContracts = this.contracts[identityId];
-        console.log({ identityContracts });
-        return !!(identityContracts && Object.keys(identityContracts).length > 0);
+      const { selectedIdentity, contracts } = this;
+      if (selectedIdentity && selectedIdentity.identityId) {
+        const { identityId } = selectedIdentity;
+        const identityContracts = contracts[identityId]; // TODO refactor: remove old typed identity getter and create statewide identityContracts, identityContractIds getters
+        const identityContractIds = identityContracts ? Object.keys(identityContracts) : [];
+
+        return identityContractIds.length > 0;
       } else {
         return false;
       }
@@ -270,7 +269,7 @@ export default {
             text: identity.id,
             value: identity.id,
             identityId: identity.id,
-            isMine: true
+            isMine: true,
           };
         })
         .catch((e) => {
