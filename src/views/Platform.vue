@@ -48,7 +48,7 @@
       align="center"
       justify="center"
     >
-      <v-col> <Documents :selected-identity-id="selectedIdentity.value" /> </v-col
+      <v-col> <Documents :selected-identity-id="selectedIdentity.identityId" /> </v-col
     ></v-row>
     <v-row v-if="selectedIdentity.value" align="center" justify="center">
       <v-col>
@@ -143,7 +143,7 @@ export default {
       comboIds.push({ header: "3rd Party Contracts (paste to import)" });
       comboIds = comboIds.concat(this.contractIdentities); // FIXME var name
 
-      console.log(comboIds);
+      console.log({comboIds});
       return comboIds;
     },
     showUserSearchTable() {
@@ -210,13 +210,19 @@ export default {
             // Here it is direct input as text: typeof selectedIdentity === 'string'
             console.log("fetching unknown contract and adding to state");
             console.log({ contractId: selectedIdentity });
-            await this.addContract({ contractId: selectedIdentity });
+            const foundContract = await this.addContract({ contractId: selectedIdentity });
 
+if (foundContract) {
+  console.log("Found valid contract and added to awesomebar", contract)
             // Set awesomebar entry to object, now it will be loaded from cache upon next select
             this.selectedIdentity = {
               text: selectedIdentity,
               value: selectedIdentity,
             };
+            } else {
+              console.log("No contract found under contractId: ", selectedIdentity)
+              this.showSnackError("No contract found under contractId: " + selectedIdentity)
+            }
             console.log("done fetching unknown contract and adding to state");
           }
         } else {

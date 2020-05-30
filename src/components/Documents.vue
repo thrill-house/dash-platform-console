@@ -245,11 +245,14 @@ export default {
       return properties;
     },
     selectedContractId() {
-      console.log("sii", this.selectedIdentityId);
+      console.log("selectedContract()")
+      console.log("this.selectedIdentityId", this.selectedIdentityId);
 
       const idContracts = this.contracts[this.selectedIdentityId];
+      console.log({idContracts})
       const contractIdsForIdentity = Object.keys(idContracts);
-      console.log("selectedContractId", contractIdsForIdentity[0]);
+      console.log({contractIdsForIdentity})
+      console.log("selectedContractId computed", contractIdsForIdentity[0]);
       return contractIdsForIdentity[0];
     },
     selectedContract() {
@@ -348,6 +351,7 @@ export default {
       return JSON.stringify(uglyJson, null, " ");
     },
     openDialog() {
+      console.log("this.selectedIdentityId", this.selectedIdentityId)
       this.showJsonDialog = true;
     },
     validateJsonAndSubmit() {

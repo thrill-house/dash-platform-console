@@ -114,14 +114,16 @@ export default new Vuex.Store({
       commit("setSyncing", true);
       const contract = await platform.contracts.get(contractId);
       console.log("fetched contract", contract);
-      const identity = { id: contract.id };
       console.dir({ contract });
 
       if (contract === null) {
         console.log("contract is null for this identity");
+        return false
       } else {
         console.log("found a contract, adding");
+      const identity = { id: contract.id };
         commit("addContract", { identity, contract });
+        return contract
       }
 
       commit("setSyncing", false);
@@ -269,7 +271,9 @@ export default new Vuex.Store({
       await sdkApps.isReady();
 
       try {
+        console.log({identityId})
         const identity = await platform.identities.get(identityId);
+        console.log({identity})
 
         // Create the note document
         const document = await platform.documents.create(
@@ -434,16 +438,17 @@ export default new Vuex.Store({
       return application.map((identity) => ({
         text: identity.id,
         value: identity.id,
-        type: "application",
+        identityId: identity.id,
       }));
     },
     contractIdentities(state) {
       const { contracts } = state;
       console.log(contracts);
-      let n = Object.keys(contracts).map((identity) => ({
-        text: identity,
-        value: identity,
-        type: "application",
+      let n = Object.keys(contracts).map((contractId) => ({
+        text: contractId,
+        value: contractId,
+        contractId,
+        identityId: contracts[contractId][contractId].ownerId, //FIXME nested 2 contractIds deep
       }));
       console.log("n", n);
       return n;
