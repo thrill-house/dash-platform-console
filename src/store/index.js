@@ -59,11 +59,13 @@ export default new Vuex.Store({
         [id]: [...names, name],
       };
     },
-    addContract(state, { identity, contract }) {
-      const { id } = identity;
+    addContract(state, contract) {
+      const identityId = contract.ownerId;
+      const contractId = contract.id;
+
       state.contracts = {
         ...state.contracts,
-        [id]: { [contract.id]: contract },
+        [identityId]: { [contractId]: contract },
       };
     },
     addDocument(state, { document }) {
@@ -118,15 +120,15 @@ export default new Vuex.Store({
 
       if (contract === null) {
         console.log("contract is null for this identity");
-        return false
+        commit("setSyncing", false);
+        return false;
       } else {
         console.log("found a contract, adding");
-      const identity = { id: contract.id };
-        commit("addContract", { identity, contract });
-        return contract
+        console.log({ contract });
+        commit("addContract", contract);
+        commit("setSyncing", false);
+        return contract;
       }
-
-      commit("setSyncing", false);
     },
     async sendDash({ dispatch }, { sendToAddress, satoshis }) {
       const { account } = client;
@@ -145,10 +147,13 @@ export default new Vuex.Store({
       }
     },
     async queryDocuments({ commit, dispatch }, { contractId, typeLocator, queryOpts }) {
-      console.log(queryOpts);
+      console.log("queryDocuments()")
+      console.log({contractId})
+      console.log({typeLocator})
+      console.log({queryOpts});
       commit("setSyncing", true);
       try {
-        const clientOpts = {
+        const clientOptsQuery = {
           seeds: [
             { service: "seed-1.evonet.networks.dash.org" },
             { service: "seed-2.evonet.networks.dash.org" },
@@ -166,12 +171,15 @@ export default new Vuex.Store({
             },
           },
         };
-        const client = new DashJS.Client(clientOpts);
-        await client.isReady();
-        const documents = await client.platform.documents.get(
+        console.log({clientOptsQuery})
+        const clientQuery = new DashJS.Client(clientOptsQuery);
+        await clientQuery.isReady();
+        const documents = await clientQuery.platform.documents.get(
           `tutorialContract.${typeLocator}`,
           queryOpts
         );
+        clientQuery.disconnect()
+        console.log("Found documents: ", {documents})
         commit("setDocuments", { contractId, documents });
         commit("setSyncing", false);
       } catch (e) {
@@ -233,7 +241,7 @@ export default new Vuex.Store({
         // Make sure contract passes validation checks
         await platform.dpp.dataContract.validate(contract);
         await platform.contracts.broadcast(contract, identity);
-        commit("addContract", { identity, contract });
+        commit("addContract", contract);
       } catch (e) {
         dispatch("showSnackError", e);
         console.error("Something went wrong:", e);
@@ -271,9 +279,9 @@ export default new Vuex.Store({
       await sdkApps.isReady();
 
       try {
-        console.log({identityId})
+        console.log({ identityId });
         const identity = await platform.identities.get(identityId);
-        console.log({identity})
+        console.log({ identity });
 
         // Create the note document
         const document = await platform.documents.create(
@@ -441,15 +449,20 @@ export default new Vuex.Store({
         identityId: identity.id,
       }));
     },
+    // TODO refactor, contractIdentities should be comboContracts and live in Platform.vue
     contractIdentities(state) {
       const { contracts } = state;
       console.log(contracts);
-      let n = Object.keys(contracts).map((contractId) => ({
-        text: contractId,
-        value: contractId,
-        contractId,
-        identityId: contracts[contractId][contractId].ownerId, //FIXME nested 2 contractIds deep
-      }));
+      let n = Object.keys(contracts).map(function (identityId) {
+        const contractId = Object.keys(contracts[identityId])[0]; // TODO support multiple contracts per identity
+
+        return {
+          text: contractId,
+          value: contractId,
+          contractId,
+          identityId,
+        };
+      });
       console.log("n", n);
       return n;
     },
@@ -482,7 +495,7 @@ export default new Vuex.Store({
     },
     contracts(state) {
       const { contracts } = state;
-      console.log(contracts);
+      console.log({ contracts });
       return contracts;
     },
     documents(state) {

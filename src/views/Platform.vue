@@ -26,7 +26,7 @@
       </v-col>
     </v-row>
     <v-row
-      v-if="selectedIdentity.value && !contracts[selectedIdentity.value]"
+      v-if="selectedIdentity.identityId && !selectedIdentityHasContracts"
       align="center"
       justify="center"
     >
@@ -36,21 +36,17 @@
             <span class="headline">Contracts</span>
           </v-card-title>
           <v-card-text class="text-center subtitle-1">
-            Your Dash Identity is <code>{{ selectedIdentity.value }}</code>
+            Your Dash Identity is <code>{{ selectedIdentity.identityId }}</code>
           </v-card-text>
           <v-card-actions class="text-center">
             <Contract :identity="selectedIdentity" />
           </v-card-actions>
         </v-card> </v-col
     ></v-row>
-    <v-row
-      v-if="selectedIdentity.value && contracts[selectedIdentity.value]"
-      align="center"
-      justify="center"
-    >
+    <v-row v-if="selectedIdentityHasContracts" align="center" justify="center">
       <v-col> <Documents :selected-identity-id="selectedIdentity.identityId" /> </v-col
     ></v-row>
-    <v-row v-if="selectedIdentity.value" align="center" justify="center">
+    <v-row v-if="selectedIdentity.isMine" align="center" justify="center">
       <v-col>
         <v-card class="mx-auto">
           <v-card-title>
@@ -132,18 +128,36 @@ export default {
       "contractIdentities",
       "searchDashNameList",
     ]),
+    selectedIdentityHasContracts() {
+      if (this.selectedIdentity && this.selectedIdentity.identityId) {
+        console.log("this.selectedIdentity", this.selectedIdentity);
+        const identityId = this.selectedIdentity.identityId;
+        
+        console.log("contracts:", this.contracts);
+        const identityContracts = this.contracts[identityId];
+        console.log({ identityContracts });
+        return !!(identityContracts && Object.keys(identityContracts).length > 0);
+      } else {
+        return false;
+      }
+    },
+
     comboIdentities() {
       let comboIds = [];
 
       // Identities our mnemonic owns
       comboIds.push({ header: "My Identities" });
-      comboIds = comboIds.concat(this.$store.state.identities.map((identity) => identity.id));
+      comboIds = comboIds.concat(
+        this.$store.state.identities.map(function (identity) {
+          return { value: identity.id, text: identity.id, identityId: identity.id, isMine: true };
+        })
+      );
 
       // ContractIds from 3rd parties (our duplicates won't be shown in the combobox)
       comboIds.push({ header: "3rd Party Contracts (paste to import)" });
       comboIds = comboIds.concat(this.contractIdentities); // FIXME var name
 
-      console.log({comboIds});
+      console.log({ comboIds });
       return comboIds;
     },
     showUserSearchTable() {
@@ -192,7 +206,8 @@ export default {
     },
     async awesomeBar() {
       const { contracts, selectedIdentity, isIdentityId } = this;
-      console.log(selectedIdentity);
+      console.log("awesomeBar()");
+      console.log({ selectedIdentity });
       if (typeof selectedIdentity === "string" && selectedIdentity.length > 0) {
         // Don't react on empty input
         if (isIdentityId(selectedIdentity)) {
@@ -212,16 +227,18 @@ export default {
             console.log({ contractId: selectedIdentity });
             const foundContract = await this.addContract({ contractId: selectedIdentity });
 
-if (foundContract) {
-  console.log("Found valid contract and added to awesomebar", contract)
-            // Set awesomebar entry to object, now it will be loaded from cache upon next select
-            this.selectedIdentity = {
-              text: selectedIdentity,
-              value: selectedIdentity,
-            };
+            if (foundContract) {
+              console.log("Found valid contract and added to awesomebar", foundContract);
+              // Set awesomebar entry to object, now it will be loaded from cache upon next select
+              this.selectedIdentity = {
+                text: foundContract.id,
+                value: foundContract.id,
+                contractId: selectedIdentity,
+                identityId: foundContract.ownerId,
+              };
             } else {
-              console.log("No contract found under contractId: ", selectedIdentity)
-              this.showSnackError("No contract found under contractId: " + selectedIdentity)
+              console.log("No contract found under contractId: ", selectedIdentity);
+              this.showSnackError("No contract found under contractId: " + selectedIdentity);
             }
             console.log("done fetching unknown contract and adding to state");
           }
@@ -240,15 +257,20 @@ if (foundContract) {
       this.selectedIdentity = { text: "", value: null };
     },
     createIdentity() {
+      console.log("createIdentity()");
       this.$store.commit("setSyncing", true);
       this.$store
         .dispatch("createIdentity")
         .then(() => {
           // If successful, set the newly created identity in the combobox
+          console.log("state.identities", this.$store.state.identities);
           const identity = this.$store.state.identities.slice(-1)[0];
+          console.log("state.identities", this.$store.state.identities);
           this.selectedIdentity = {
             text: identity.id,
             value: identity.id,
+            identityId: identity.id,
+            isMine: true
           };
         })
         .catch((e) => {

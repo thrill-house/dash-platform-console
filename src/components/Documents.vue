@@ -11,7 +11,7 @@
           label="Document Type"
         ></v-select>
         <v-btn dark small fab top right color="blue" class="mt-2 ml-2" @click="() => openDialog()">
-          <v-icon>mdi-plus</v-icon>
+          <v-icon>mdi-file-upload</v-icon>
         </v-btn>
       </v-col>
     </v-row>
@@ -245,13 +245,13 @@ export default {
       return properties;
     },
     selectedContractId() {
-      console.log("selectedContract()")
+      console.log("selectedContract()");
       console.log("this.selectedIdentityId", this.selectedIdentityId);
 
       const idContracts = this.contracts[this.selectedIdentityId];
-      console.log({idContracts})
+      console.log({ idContracts });
       const contractIdsForIdentity = Object.keys(idContracts);
-      console.log({contractIdsForIdentity})
+      console.log({ contractIdsForIdentity });
       console.log("selectedContractId computed", contractIdsForIdentity[0]);
       return contractIdsForIdentity[0];
     },
@@ -339,8 +339,14 @@ export default {
         }
       }
       this.queryOpts.where = where.length ? where : undefined;
+      this.queryOpts.orderBy = orderBy.length ? orderBy : undefined;
 
       console.dir(this.queryOpts, { depth: 5 });
+      console.log({
+        contractId: selectedContractId,
+        typeLocator: selectedDocumentType,
+        queryOpts: this.queryOpts,
+      })
       queryDocuments({
         contractId: selectedContractId,
         typeLocator: selectedDocumentType,
@@ -351,7 +357,7 @@ export default {
       return JSON.stringify(uglyJson, null, " ");
     },
     openDialog() {
-      console.log("this.selectedIdentityId", this.selectedIdentityId)
+      console.log("this.selectedIdentityId", this.selectedIdentityId);
       this.showJsonDialog = true;
     },
     validateJsonAndSubmit() {
