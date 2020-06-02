@@ -147,10 +147,10 @@ export default new Vuex.Store({
       }
     },
     async queryDocuments({ commit, dispatch }, { contractId, typeLocator, queryOpts }) {
-      console.log("queryDocuments()")
-      console.log({contractId})
-      console.log({typeLocator})
-      console.log({queryOpts});
+      console.log("queryDocuments()");
+      console.log({ contractId });
+      console.log({ typeLocator });
+      console.log({ queryOpts });
       commit("setSyncing", true);
       try {
         const clientOptsQuery = {
@@ -171,15 +171,15 @@ export default new Vuex.Store({
             },
           },
         };
-        console.log({clientOptsQuery})
+        console.log({ clientOptsQuery });
         const clientQuery = new DashJS.Client(clientOptsQuery);
         await clientQuery.isReady();
         const documents = await clientQuery.platform.documents.get(
           `tutorialContract.${typeLocator}`,
           queryOpts
         );
-        clientQuery.disconnect()
-        console.log("Found documents: ", {documents})
+        clientQuery.disconnect();
+        console.log("Found documents: ", { documents });
         commit("setDocuments", { contractId, documents });
         commit("setSyncing", false);
       } catch (e) {
@@ -236,10 +236,29 @@ export default new Vuex.Store({
       console.log(identityId);
       try {
         let identity = await platform.identities.get(identityId);
+        const definitions = json.definitions;
+        delete json.definitions;
+        console.log("Creating contract with:");
+        console.log("JSON", json);
+        console.log("identity", identity);
         const contract = await platform.contracts.create(json, identity);
-        console.log({ contract });
+        console.log("Contract created", { contract });
+        console.log("contract.toJSON()", contract.toJSON());
+        console.log("contract.setDefinitions()");
+        contract.setDefinitions(definitions);
+        console.log("contract.toJSON()", contract.toJSON());
         // Make sure contract passes validation checks
-        await platform.dpp.dataContract.validate(contract);
+        let isValid;
+        try {
+          console.log("dataContract.validate()");
+          isValid = await platform.dpp.dataContract.validate(contract);
+        } catch (e) {
+          console.log("this is the validation error", e);
+          throw e;
+        } finally {
+          console.log("isValid", isValid);
+        }
+        console.log("contracts.broadcast()");
         await platform.contracts.broadcast(contract, identity);
         commit("addContract", contract);
       } catch (e) {
