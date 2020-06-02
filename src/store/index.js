@@ -101,7 +101,7 @@ export default new Vuex.Store({
     },
     resetState() {
       this.replaceState(JSON.parse(JSON.stringify(initState)));
-      this.dispatch("initWallet");
+      this.dispatch("initWallet"); // FIXME this shouldn't be in a mutation
     },
     resetSync(state) {
       state.isSyncing = true;
