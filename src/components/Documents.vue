@@ -458,8 +458,9 @@ export default {
       const orderBy = [];
       if (orderBy1.property) orderBy.push([orderBy1.property, orderBy1.direction]);
       if (orderBy2.property) orderBy.push([orderBy2.property, orderBy2.direction]);
-      queryOpts.orderBy = orderBy;
 
+      queryOpts.orderBy = orderBy;
+      
       const where = [];
       let i;
       for (i in documentProperties) {
