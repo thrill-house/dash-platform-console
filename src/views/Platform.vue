@@ -44,7 +44,13 @@
         </v-card> </v-col
     ></v-row>
     <v-row v-if="selectedIdentityHasContracts" align="center" justify="center">
-      <v-col> <Documents :selected-identity-id="selectedIdentity.identityId" /> </v-col
+      <v-col>
+        <Documents
+          :selected-identity-id="selectedIdentity.identityId"
+          :panel="showContract"
+          :selected-document-type-prop="$route.query.type"
+          :query-opts-prop="$route.query.queryopts"
+        /> </v-col
     ></v-row>
     <v-row v-if="selectedIdentity.isMine" align="center" justify="center">
       <v-col>
@@ -114,6 +120,8 @@ export default {
   data() {
     return {
       selectedIdentity: { text: "", value: null },
+      selectedDocumentTypeProp: "",
+      showContract: false,
       submittingSearch: "false",
       newUsername: "",
       fab: false,
@@ -179,6 +187,12 @@ export default {
       }, 50);
     },
   },
+  mounted() {
+    if (this.$route.params.contractid) {
+      this.selectedIdentity = this.$route.params.contractid;
+    }
+    this.awesomeBar();
+  },
   methods: {
     ...mapActions(["addContract", "showSnackError", "searchDashNames", "registerName"]),
     closeFab() {
@@ -210,7 +224,7 @@ export default {
       if (typeof selectedIdentity === "string" && selectedIdentity.length > 0) {
         // Don't react on empty input
         if (isIdentityId(selectedIdentity)) {
-          // Either load identity actions or launch a name search
+          // Either load identity action cards, fetch a contract or launch a name search
           console.log("contract", contracts);
           const contract = contracts[selectedIdentity.value];
           console.log(contract);
@@ -221,7 +235,7 @@ export default {
             this.selectedIdentity.length > 5 // FIXME should be 44? can probably remove
           ) {
             // If awesomebar input is selected, it's an object: selectedIdentity === {value: , text:}
-            // Here it is direct input as text: typeof selectedIdentity === 'string'
+            // Here it is direct text input: typeof selectedIdentity === 'string'
             console.log("fetching unknown contract and adding to state");
             console.log({ contractId: selectedIdentity });
             const foundContract = await this.addContract({ contractId: selectedIdentity });
@@ -235,6 +249,9 @@ export default {
                 contractId: selectedIdentity,
                 identityId: foundContract.ownerId,
               };
+
+              // Open contract expansion panel index 0
+              this.showContract = this.$route.query.showcontract ? 0 : false; // TODO should also work if contract is loaded from cache
             } else {
               console.log("No contract found under contractId: ", selectedIdentity);
               this.showSnackError("No contract found under contractId: " + selectedIdentity);

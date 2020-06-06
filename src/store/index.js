@@ -247,19 +247,23 @@ export default new Vuex.Store({
         console.log("contract.setDefinitions()");
         contract.setDefinitions(definitions);
         console.log("contract.toJSON()", contract.toJSON());
+
         // Make sure contract passes validation checks
-        let isValid;
-        try {
-          console.log("dataContract.validate()");
-          isValid = await platform.dpp.dataContract.validate(contract);
-        } catch (e) {
-          console.log("this is the validation error", e);
-          throw e;
-        } finally {
-          console.log("isValid", isValid);
+        console.log("dataContract.validate()");
+        const validationResult = await platform.dpp.dataContract.validate(contract);
+
+        if (validationResult.isValid()) {
+          // If validation passed, broadcast contract
+
+          console.log("validation passed, broadcasting contract..");
+          await platform.contracts.broadcast(contract, identity);
+        } else {
+          // If validation errors exist, log to console and throw the first.
+
+          console.error(validationResult);
+          throw validationResult.errors[0];
         }
-        console.log("contracts.broadcast()");
-        await platform.contracts.broadcast(contract, identity);
+
         commit("addContract", contract);
       } catch (e) {
         dispatch("showSnackError", e);
