@@ -5,6 +5,16 @@ import createPersistedState from "vuex-persistedstate";
 Vue.use(Vuex);
 
 const DashJS = require("dash");
+console.log({ DashJS });
+// eslint-disable-next-line no-unused-vars
+import DataContractFacade from "@dashevo/dpp";
+console.log({ DataContractFacade });
+const dcf = new DataContractFacade();
+console.log({ dcf });
+
+const DashPlatformProtocol = require("@dashevo/dpp");
+const dpp = new DashPlatformProtocol();
+console.log({ dpp });
 
 //
 // Cache identity lookups to speed up UX by avoiding to hit dapi multiple times
@@ -130,8 +140,8 @@ export default new Vuex.Store({
     // eslint-disable-next-line no-unused-vars
     async validateContractJSON({ state }, { identityId, json }) {
       const { platform } = client;
-      const identity = await cachedOrGetIdentity(client, identityId);
-      const contract = await platform.contracts.create(json, identity);
+      // const identity = await cachedOrGetIdentity(client, identityId);
+      const contract = await platform.dpp.dataContract.create(identityId, json);
       console.dir({ contract });
       const validationResult = await platform.dpp.dataContract.validate(contract);
 
