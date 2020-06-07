@@ -16,7 +16,7 @@ const routes = [
     component: Wallet,
   },
   {
-    path: "/platform/:contractid",
+    path: "/platform/:contractid?",
     name: "platform",
     component: Platform,
   },
