@@ -6,7 +6,16 @@ Vue.use(Vuex);
 
 const DashJS = require("dash");
 
+//
+// Cache identity lookups to speed up UX by avoiding to hit dapi multiple times
+//
+
 const IndentitiesCache = {};
+
+const cacheIdentity = (identity) => {
+  IndentitiesCache[identity.id] = identity;
+};
+
 const cachedOrGetIdentity = async (client, identityId) => {
   console.log("Checking IdentitiesCache for known identities using IdentityId", identityId);
   let identity;
@@ -21,6 +30,9 @@ const cachedOrGetIdentity = async (client, identityId) => {
   console.log({ IndentitiesCache });
   return identity;
 };
+
+//
+//
 
 let client;
 const initState = {
@@ -243,6 +255,7 @@ export default new Vuex.Store({
       try {
         await client.isReady();
         const identity = await client.platform.identities.register();
+        cacheIdentity(identity);
         commit("addIdentity", { identity });
       } catch (e) {
         dispatch("showSnackError", e);
@@ -251,7 +264,8 @@ export default new Vuex.Store({
       }
     },
     async registerName({ commit }, { identityId, name }) {
-      const identity = await client.platform.identities.get(identityId);
+      // const identity = await client.platform.identities.get(identityId);
+      const identity = await cachedOrGetIdentity(client, identityId);
       const createDocument = await client.platform.names.register(name, identity);
       console.log("createDocument", createDocument);
       const [doc] = await client.platform.documents.get("dpns.domain", {
@@ -267,7 +281,8 @@ export default new Vuex.Store({
       const { platform } = client;
       console.log(identityId);
       try {
-        let identity = await platform.identities.get(identityId);
+        // let identity = await platform.identities.get(identityId);
+        let identity = await cachedOrGetIdentity(client, identityId);
         const definitions = json.definitions;
         delete json.definitions;
         console.log("Creating contract with:");
@@ -335,7 +350,9 @@ export default new Vuex.Store({
 
       try {
         console.log({ identityId });
-        const identity = await platform.identities.get(identityId);
+        // const identity = await platform.identities.get(identityId);
+        const identity = await cachedOrGetIdentity(client, identityId);
+
         console.log({ identity });
 
         // Create the note document
