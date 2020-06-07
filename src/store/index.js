@@ -59,17 +59,6 @@ const initState = {
   documents: {},
 };
 
-export const identityTypes = {
-  user: {
-    name: "user",
-    value: 1,
-  },
-  application: {
-    name: "application",
-    value: 2,
-  },
-};
-
 export default new Vuex.Store({
   state: initState,
   mutations: {
