@@ -16,6 +16,25 @@
               <v-btn text :loading="submitting" @click="validateJsonAndSubmit">submit</v-btn>
             </v-toolbar-items>
           </v-toolbar>
+          <v-list dense>
+            <v-subheader
+              >Schema Validation<v-icon v-if="isJsonValid" color="green"
+                >mdi-check</v-icon
+              ></v-subheader
+            >
+            <v-list-item-group v-model="jsonErrors" color="red">
+              <v-list-item v-for="(error, i) in jsonErrors" :key="i" color="red">
+                <v-list-item-icon>
+                  <v-icon color="red">mdi-cancel</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content color="red">
+                  <v-list-item-title color="red" style="color: 'red';"
+                    ><span style="color: red;">{{ error }}</span></v-list-item-title
+                  >
+                </v-list-item-content>
+              </v-list-item>
+            </v-list-item-group>
+          </v-list>
           <AceEditor
             ref="aceEditor"
             v-model="json"
@@ -37,6 +56,8 @@ import AceEditor from "vue2-ace-editor";
 import "brace/mode/json";
 import "brace/theme/clouds_midnight";
 
+import dpp from "@dashevo/dpp";
+
 export default {
   components: { AceEditor },
   props: ["identity"],
@@ -46,13 +67,38 @@ export default {
       submitting: false,
       selectedIdentity: {},
       json: "",
+      jsonErrors: [],
+      isJsonValid: true,
     };
   },
   computed: {
     ...mapGetters(["applicationIdentitiesWithContracts", "contracts"]),
   },
   methods: {
-    ...mapActions(["registerContract", "showSnackError"]),
+    ...mapActions(["registerContract", "validateContractJSON", "showSnackError"]),
+    async validateJSONSchema() {
+      console.log("validating");
+      let parsedJSON;
+      try {
+        parsedJSON = JSON.parse(this.json.toString());
+        this.jsonErrors = [];
+      } catch (e) {
+        console.log(e);
+        this.jsonErrors = [e];
+        this.isJsonValid = false;
+        return;
+      }
+      // TODO FIXME avoid race conditions by queuing / cancelling async calls
+      const validationResult = await this.validateContractJSON({
+        identityId: this.identity.value,
+        json: parsedJSON,
+      });
+      this.isJsonValid = validationResult.isValid();
+      this.jsonErrors = validationResult.errors.map((error) => {
+        return `${error.dataPath}: ${error.message}`;
+      });
+      console.log("jsonErrors", this.jsonErrors);
+    },
     setAceEditorReadonly() {
       const readonly = this.selectedIdentity.contract;
       if (this.$refs.aceEditor) {
@@ -60,7 +106,11 @@ export default {
       }
     },
     aceEditorInit() {
+      const that = this;
       this.setAceEditorReadonly();
+      this.$refs.aceEditor.editor.session.on("change", function () {
+        that.validateJSONSchema();
+      });
     },
     openDialog(identity) {
       this.selectedIdentity = identity;
@@ -68,11 +118,19 @@ export default {
       this.showJsonDialog = true;
       this.setAceEditorReadonly();
     },
-    validateJsonAndSubmit() {
+    async validateJsonAndSubmit() {
       const { json } = this;
       try {
-        JSON.parse(json.toString());
-        this.submit();
+        const parsedJSON = JSON.parse(json.toString());
+        const validationResult = await this.validateContractJSON({
+          identityId: this.identity.value,
+          json: parsedJSON,
+        });
+        if (validationResult.isValid()) {
+          this.submit();
+        } else {
+          throw validationResult.errors[0]; // FIXME this error doesn't show the path, also it's checked later during broadcast, maybe remove this check
+        }
       } catch (e) {
         this.showSnackError(e);
       }

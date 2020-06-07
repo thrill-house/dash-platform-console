@@ -6,6 +6,22 @@ Vue.use(Vuex);
 
 const DashJS = require("dash");
 
+const IndentitiesCache = {};
+const cachedOrGetIdentity = async (client, identityId) => {
+  console.log("Checking IdentitiesCache for known identities using IdentityId", identityId);
+  let identity;
+  if (identityId in IndentitiesCache) {
+    identity = IndentitiesCache[identityId];
+    console.log("Found existing cached identity", identity);
+  } else {
+    identity = await client.platform.identities.get(identityId);
+    IndentitiesCache[identity.id] = identity;
+    console.log("Fetched unknown identity", identity);
+  }
+  console.log({ IndentitiesCache });
+  return identity;
+};
+
 let client;
 const initState = {
   isSyncing: false,
@@ -110,6 +126,22 @@ export default new Vuex.Store({
     },
   },
   actions: {
+    // eslint-disable-next-line no-unused-vars
+    async validateContractJSON({ state }, { identityId, json }) {
+      const { platform } = client;
+      const identity = await cachedOrGetIdentity(client, identityId);
+      const contract = await platform.contracts.create(json, identity);
+      console.dir({ contract });
+      const validationResult = await platform.dpp.dataContract.validate(contract);
+
+      if (validationResult.isValid()) {
+        console.log("validation success");
+      } else {
+        console.log("validation failed");
+      }
+      console.log(validationResult);
+      return validationResult;
+    },
     async addContract({ commit }, { contractId }) {
       console.log({ contractId });
       const { platform } = client;
