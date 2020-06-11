@@ -20,24 +20,24 @@ console.log({ dpp });
 // Cache identity lookups to speed up UX by avoiding to hit dapi multiple times
 //
 
-const IndentitiesCache = {};
+const IdentitiesCache = {};
 
 const cacheIdentity = (identity) => {
-  IndentitiesCache[identity.id] = identity;
+  IdentitiesCache[identity.id] = identity;
 };
 
 const cachedOrGetIdentity = async (client, identityId) => {
   console.log("Checking IdentitiesCache for known identities using IdentityId", identityId);
   let identity;
-  if (identityId in IndentitiesCache) {
-    identity = IndentitiesCache[identityId];
+  if (identityId in IdentitiesCache) {
+    identity = IdentitiesCache[identityId];
     console.log("Found existing cached identity", identity);
   } else {
     identity = await client.platform.identities.get(identityId);
-    IndentitiesCache[identity.id] = identity;
+    IdentitiesCache[identity.id] = identity;
     console.log("Fetched unknown identity", identity);
   }
-  console.log({ IndentitiesCache });
+  console.log({ IdentitiesCache });
   return identity;
 };
 
@@ -141,7 +141,8 @@ export default new Vuex.Store({
     async validateContractJSON({ state }, { identityId, json }) {
       const { platform } = client;
       // const identity = await cachedOrGetIdentity(client, identityId);
-      const contract = await platform.dpp.dataContract.create(identityId, json);
+      // const contract = await platform.dpp.dataContract.create(identityId, json);
+      const contract = await platform.contracts.create(json, identityId);
       console.dir({ contract });
       const validationResult = await platform.dpp.dataContract.validate(contract);
 

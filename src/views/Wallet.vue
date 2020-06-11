@@ -364,7 +364,7 @@ export default {
       this.mnemonicText = "";
       this.$store.commit("resetState");
     },
-    async copyMnemonicToClipboard() {
+    copyMnemonicToClipboard() {
       let mnemonic = this.$refs.mnemonic.$el.querySelector("textarea");
       mnemonic.select();
       document.execCommand("copy");
