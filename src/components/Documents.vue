@@ -31,8 +31,7 @@
                   router
                   :to="{
                     name: 'platform',
-                    params: { contractid: selectedContractId },
-                    query: { showcontract: true },
+                    params: { contractid: selectedContractId }
                   }"
                   target="_blank"
                   @click.stop

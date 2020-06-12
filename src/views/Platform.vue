@@ -121,7 +121,7 @@ export default {
     return {
       selectedIdentity: { text: "", value: null },
       selectedDocumentTypeProp: "",
-      showContract: false,
+      showContract: true,
       submittingSearch: "false",
       newUsername: "",
       fab: false,
@@ -215,7 +215,7 @@ export default {
         });
     },
     isIdentityId(value) {
-      return typeof value === "string" && value.length === 44;
+      return typeof value === "string" && value.length >= 42 && value.length <= 44;
     },
     async awesomeBar() {
       const { contracts, selectedIdentity, isIdentityId } = this;
@@ -251,7 +251,7 @@ export default {
               };
 
               // Open contract expansion panel index 0
-              this.showContract = this.$route.query.showcontract ? 0 : false; // TODO should also work if contract is loaded from cache
+              this.showContract = this.$route.query.showcontract === "false" ? false : 0; // TODO should also work if contract is loaded from cache
             } else {
               console.log("No contract found under contractId: ", selectedIdentity);
               this.showSnackError("No contract found under contractId: " + selectedIdentity);
