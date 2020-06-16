@@ -18,7 +18,7 @@ const initState = {
     // snack immune develop side proof air dune melt replace cover apology joke
     // AReTHBxAzKbdqx3ZJyX94gNW4xhyjEDkWwVWcfAK7X9m
     //drastic raise hurry step always person bundle end humble toss estate inner
-    mnemonic: undefined,
+    mnemonic: null,
     confirmedBalance: 0,
   },
   errorDetails: null,
