@@ -31,7 +31,7 @@
                   router
                   :to="{
                     name: 'platform',
-                    params: { contractid: selectedContractId }
+                    params: { contractid: selectedContractId },
                   }"
                   target="_blank"
                   @click.stop
@@ -64,6 +64,7 @@
                     name: 'platform',
                     params: { contractid: selectedContractId },
                     query: {
+                      showcontract: false,
                       querydocs: true,
                       type: selectedDocumentType,
                       queryopts: encodeURIComponent(JSON.stringify(readQueryOpts())),
@@ -377,9 +378,11 @@ export default {
       let idx;
       for (idx in uriOpts.where) {
         console.log("these are ops", idx);
+        console.log("where[idx] :>> ", uriOpts.where[idx]);
         const property = uriOpts.where[idx][0];
         const operator = uriOpts.where[idx][1];
         const value = uriOpts.where[idx][2];
+        console.log({ property, operator, value });
         whereOperators[property] = operator;
         whereValues[property] = value;
       }
@@ -392,9 +395,11 @@ export default {
         this.orderBy1.property = uriOpts.orderBy[0][0] || "";
         this.orderBy1.direction = uriOpts.orderBy[0][1] || "asc";
         console.log({ orderBy1 });
-        this.orderBy2.property = uriOpts.orderBy[1][0] || "";
-        this.orderBy2.direction = uriOpts.orderBy[1][1] || "asc";
-        console.log({ orderBy2 });
+        if (uriOpts.orderBy.length === 2) {
+          this.orderBy2.property = uriOpts.orderBy[1][0] || "";
+          this.orderBy2.direction = uriOpts.orderBy[1][1] || "asc";
+          console.log({ orderBy2 });
+        }
       }
       // const { limit, startAt } = queryModifiers;
       // let queryOpts = { limit, startAt };
@@ -459,7 +464,7 @@ export default {
       if (orderBy2.property) orderBy.push([orderBy2.property, orderBy2.direction]);
 
       queryOpts.orderBy = orderBy;
-      
+
       const where = [];
       let i;
       for (i in documentProperties) {
