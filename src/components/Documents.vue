@@ -31,8 +31,7 @@
                   router
                   :to="{
                     name: 'platform',
-                    params: { contractid: selectedContractId },
-                    query: { showcontract: true },
+                    params: { contractid: selectedContractId }
                   }"
                   target="_blank"
                   @click.stop
@@ -458,8 +457,9 @@ export default {
       const orderBy = [];
       if (orderBy1.property) orderBy.push([orderBy1.property, orderBy1.direction]);
       if (orderBy2.property) orderBy.push([orderBy2.property, orderBy2.direction]);
-      queryOpts.orderBy = orderBy;
 
+      queryOpts.orderBy = orderBy;
+      
       const where = [];
       let i;
       for (i in documentProperties) {

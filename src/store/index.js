@@ -175,7 +175,7 @@ export default new Vuex.Store({
       }
     },
     async sendDash({ dispatch }, { sendToAddress, satoshis }) {
-      const { account } = client;
+      const account = await client.wallet.getAccount();
       try {
         const transaction = account.createTransaction({
           recipient: sendToAddress, // Evonet faucet
@@ -207,9 +207,9 @@ export default new Vuex.Store({
           ],
           network: "testnet",
           apps: {
-            dpns: {
-              contractId: "7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM",
-            },
+            // dpns: {
+            //   contractId: "7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM",
+            // },
             tutorialContract: {
               contractId,
             },
@@ -217,7 +217,7 @@ export default new Vuex.Store({
         };
         console.log({ clientOptsQuery });
         const clientQuery = new DashJS.Client(clientOptsQuery);
-        await clientQuery.isReady();
+        // await clientQuery.isReady();
         const documents = await clientQuery.platform.documents.get(
           `tutorialContract.${typeLocator}`,
           queryOpts
@@ -253,7 +253,6 @@ export default new Vuex.Store({
     },
     async createIdentity({ commit, dispatch }) {
       try {
-        await client.isReady();
         const identity = await client.platform.identities.register();
         cacheIdentity(identity);
         commit("addIdentity", { identity });
@@ -332,14 +331,14 @@ export default new Vuex.Store({
           { service: "seed-5.evonet.networks.dash.org" },
         ],
         network: "testnet",
-        mnemonic: this.state.wallet.mnemonic,
+        wallet: { mnemonic: this.state.wallet.mnemonic },
         apps: {
           tutorialContract: {
             contractId,
           },
-          dpns: {
-            contractId: "7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM",
-          },
+          // dpns: {
+          //   contractId: "7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM",
+          // },
         },
       };
       console.log("second dashjs client opts", clientAppsOpts);
@@ -406,11 +405,13 @@ export default new Vuex.Store({
             { service: "seed-5.evonet.networks.dash.org" },
           ],
           network: "testnet",
-          mnemonic,
+          wallet: {
+            mnemonic,
+          },
           apps: {
-            dpns: {
-              contractId: "7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM",
-            },
+            // dpns: {
+            //   contractId: "7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM",
+            // },
           },
         });
         // const onReceivedTransaction = function (data) {
@@ -420,14 +421,13 @@ export default new Vuex.Store({
         //   console.log("Total balance", account.getTotalBalance());
         // };
         // client.account.on("FETCHED/UNCONFIRMED_TRANSACTION", onReceivedTransaction);
-        await client.isReady().then(async () => {
-          if (typeof mnemonic !== "undefined") dispatch("refreshWallet");
-          setInterval(function () {
-            // console.log(getters.hasWallet);
-            if (getters.hasWallet) dispatch("refreshWallet");
-          }, 5000);
-          console.dir({ client }, { depth: 5 });
-        });
+        await client.wallet.getAccount();
+        if (typeof mnemonic !== "undefined") dispatch("refreshWallet");
+        setInterval(function () {
+          // console.log(getters.hasWallet);
+          if (getters.hasWallet) dispatch("refreshWallet");
+        }, 5000);
+        console.dir({ client }, { depth: 5 });
       } catch (e) {
         console.debug("Wallet synchronized with an error:");
         dispatch("showSnackError", e);
@@ -450,8 +450,8 @@ export default new Vuex.Store({
       commit("setSnackError", { show: true, text: error });
     },
     async refreshWallet({ commit, dispatch }) {
-      const { wallet, account } = client;
-
+      const { wallet } = client;
+      const account = await client.wallet.getAccount();
       try {
         const unusedAddress = account.getUnusedAddress().address;
         const confirmedBalance = account.getConfirmedBalance();
@@ -459,7 +459,7 @@ export default new Vuex.Store({
         const addresses = account.getAddresses();
         const balance = account.getTotalBalance();
         const utxos = account.getUTXOS();
-        const mnemonic = wallet.mnemonic;
+        const mnemonic = wallet.exportWallet();
 
         commit("setWallet", {
           mnemonic,
