@@ -172,8 +172,7 @@
                     <td>
                       <a
                         :href="
-                          'http://devnet-evonet-28309188.us-west-2.elb.amazonaws.com:3001/insight/tx/' +
-                          utxo.txId
+                          'http://insight.evonet.networks.dash.org:3001/insight/tx/' + utxo.txId
                         "
                         target="_bank"
                         >{{ utxo.txId }}</a

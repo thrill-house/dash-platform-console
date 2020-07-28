@@ -277,7 +277,7 @@ export default {
     documentProperties() {
       const { contracts, selectedContractId } = this;
       console.log("cc", contracts[selectedContractId]);
-      const properties = [];
+      const properties = ['$id'];
       console.log("ts", this.selectedContract);
       if (this.selectedContract.documents[this.selectedDocumentType]) {
         console.log(this.selectedContract.documents[this.selectedDocumentType]);

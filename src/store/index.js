@@ -1,5 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
+import axios from "axios";
 import createPersistedState from "vuex-persistedstate";
 
 Vue.use(Vuex);
@@ -7,14 +8,6 @@ Vue.use(Vuex);
 const DashJS = require("dash");
 console.log({ DashJS });
 // eslint-disable-next-line no-unused-vars
-import DataContractFacade from "@dashevo/dpp";
-console.log({ DataContractFacade });
-const dcf = new DataContractFacade();
-console.log({ dcf });
-
-const DashPlatformProtocol = require("@dashevo/dpp");
-const dpp = new DashPlatformProtocol();
-console.log({ dpp });
 
 //
 // Cache identity lookups to speed up UX by avoiding to hit dapi multiple times
@@ -137,12 +130,33 @@ export default new Vuex.Store({
     },
   },
   actions: {
+    async getMagicInternetMoney() {
+      console.log("Awaiting faucet drip..");
+      const account = await client.wallet.getAccount();
+      const address = account.getUnusedAddress().address;
+      console.log("... for address: " + address);
+      try {
+        // const req = await this.$axios.get(
+        //   `https://qetrgbsx30.execute-api.us-west-1.amazonaws.com/stage/?dashAddress=${address}`,
+        //   { crossdomain: true }
+        // )
+        // const req = await this.$axios.get(`http://localhost:5000/evodrip/us-central1/evofaucet/drip/${address}`)
+        const req = await axios.get(
+          `https://us-central1-evodrip.cloudfunctions.net/evofaucet/drip/${address}`
+        );
+        console.log("... faucet dropped.");
+        console.log(req);
+      } catch (e) {
+        console.log(e);
+        throw e;
+      }
+    },
     // eslint-disable-next-line no-unused-vars
     async validateContractJSON({ state }, { identityId, json }) {
       const { platform } = client;
-      // const identity = await cachedOrGetIdentity(client, identityId);
+      const identity = await cachedOrGetIdentity(client, identityId);
       // const contract = await platform.dpp.dataContract.create(identityId, json);
-      const contract = await platform.contracts.create(json, identityId);
+      const contract = await platform.contracts.create(json, identity);
       console.dir({ contract });
       const validationResult = await platform.dpp.dataContract.validate(contract);
 
@@ -198,14 +212,7 @@ export default new Vuex.Store({
       commit("setSyncing", true);
       try {
         const clientOptsQuery = {
-          seeds: [
-            { service: "seed-1.evonet.networks.dash.org" },
-            { service: "seed-2.evonet.networks.dash.org" },
-            { service: "seed-3.evonet.networks.dash.org" },
-            { service: "seed-4.evonet.networks.dash.org" },
-            { service: "seed-5.evonet.networks.dash.org" },
-          ],
-          network: "testnet",
+          network: "evonet",
           apps: {
             // dpns: {
             //   contractId: "7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM",
@@ -265,7 +272,7 @@ export default new Vuex.Store({
     async registerName({ commit }, { identityId, name }) {
       // const identity = await client.platform.identities.get(identityId);
       const identity = await cachedOrGetIdentity(client, identityId);
-      const createDocument = await client.platform.names.register(name, identity);
+      const createDocument = await client.platform.names.register(name + ".dash", identity);
       console.log("createDocument", createDocument);
       const [doc] = await client.platform.documents.get("dpns.domain", {
         where: [
@@ -323,14 +330,7 @@ export default new Vuex.Store({
       console.log({ json });
 
       const clientAppsOpts = {
-        seeds: [
-          { service: "seed-1.evonet.networks.dash.org" },
-          { service: "seed-2.evonet.networks.dash.org" },
-          { service: "seed-3.evonet.networks.dash.org" },
-          { service: "seed-4.evonet.networks.dash.org" },
-          { service: "seed-5.evonet.networks.dash.org" },
-        ],
-        network: "testnet",
+        network: "evonet",
         wallet: { mnemonic: this.state.wallet.mnemonic },
         apps: {
           tutorialContract: {
@@ -345,12 +345,12 @@ export default new Vuex.Store({
 
       const sdkApps = new DashJS.Client(clientAppsOpts);
       const { platform } = sdkApps;
-      await sdkApps.isReady();
 
       try {
         console.log({ identityId });
-        // const identity = await platform.identities.get(identityId);
-        const identity = await cachedOrGetIdentity(client, identityId);
+        await client.wallet.getAccount();
+        const identity = await platform.identities.get(identityId);
+        // const identity = await cachedOrGetIdentity(client, identityId);
 
         console.log({ identity });
 
@@ -397,14 +397,7 @@ export default new Vuex.Store({
 
         console.log("mnemonic is", mnemonic);
         client = new DashJS.Client({
-          seeds: [
-            { service: "seed-1.evonet.networks.dash.org" },
-            { service: "seed-2.evonet.networks.dash.org" },
-            { service: "seed-3.evonet.networks.dash.org" },
-            { service: "seed-4.evonet.networks.dash.org" },
-            { service: "seed-5.evonet.networks.dash.org" },
-          ],
-          network: "testnet",
+          network: "evonet",
           wallet: {
             mnemonic,
           },
@@ -421,7 +414,12 @@ export default new Vuex.Store({
         //   console.log("Total balance", account.getTotalBalance());
         // };
         // client.account.on("FETCHED/UNCONFIRMED_TRANSACTION", onReceivedTransaction);
-        await client.wallet.getAccount();
+        const account = await client.wallet.getAccount();
+        const totalBalance = account.getTotalBalance();
+        if (totalBalance < 1000000) {
+          dispatch("getMagicInternetMoney");
+        }
+
         if (typeof mnemonic !== "undefined") dispatch("refreshWallet");
         setInterval(function () {
           // console.log(getters.hasWallet);
@@ -491,18 +489,6 @@ export default new Vuex.Store({
     },
     hasWallet(state) {
       return Boolean(state.wallet.mnemonic);
-    },
-    identityLists(state) {
-      const { identities } = state;
-      console.log("identities", identities);
-      console.log("state", state);
-
-      const lists = Object.keys(identityTypes).map((typeName) => ({
-        type: identityTypes[typeName],
-        items: identities[typeName],
-      }));
-      console.log("lists", lists);
-      return lists;
     },
     userIdentities(state) {
       const { user } = state.identities;
