@@ -141,11 +141,13 @@ export default new Vuex.Store({
         //   { crossdomain: true }
         // )
         // const req = await this.$axios.get(`http://localhost:5000/evodrip/us-central1/evofaucet/drip/${address}`)
-        const req = await axios.get(
-          `https://us-central1-evodrip.cloudfunctions.net/evofaucet/drip/${address}`
-        );
+        const reqs = [
+          axios.get(`https://us-central1-evodrip.cloudfunctions.net/evofaucet/drip/${address}`),
+          axios.get(`http://134.122.104.155:5050/drip/${address}`),
+        ];
+        await Promise.race(reqs);
         console.log("... faucet dropped.");
-        console.log(req);
+        console.log(reqs);
       } catch (e) {
         console.log(e);
         throw e;
