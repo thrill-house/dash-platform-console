@@ -207,6 +207,30 @@
               <v-btn text :loading="submitting" @click="validateJsonAndSubmit">submit</v-btn>
             </v-toolbar-items>
           </v-toolbar>
+          <v-list dense>
+            <v-subheader
+              >Schema Validation<v-icon v-if="isJsonValid" color="green">mdi-check</v-icon
+              ><v-progress-circular
+                v-if="!isJsonValid && isJsonValidating"
+                size="16"
+                width="2"
+                indeterminate
+                color="#008de4"
+                class="ml-1"
+            /></v-subheader>
+            <v-list-item-group v-model="jsonErrors" color="red">
+              <v-list-item v-for="(error, i) in jsonErrors" :key="i" color="red">
+                <v-list-item-icon>
+                  <v-icon color="red">mdi-cancel</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content color="red">
+                  <v-list-item-title color="red" style="color: 'red';"
+                    ><span style="color: red;">{{ error }}</span></v-list-item-title
+                  >
+                </v-list-item-content>
+              </v-list-item>
+            </v-list-item-group>
+          </v-list>
           <AceEditor
             ref="aceEditor"
             v-model="json"
@@ -214,6 +238,7 @@
             theme="clouds_midnight"
             width="100%"
             height="94vh"
+            @init="aceEditorInit"
           />
         </v-form>
       </v-card>
@@ -242,12 +267,16 @@ export default {
   props: ["selectedIdentityId", "panel", "selectedDocumentTypeProp", "queryOptsProp"],
   data() {
     return {
+      none: Date.now(),
       snackbar: false,
       snackbarText: "",
       selectedDocumentType: "",
       showJsonDialog: false,
       submitting: false,
       json: "",
+      jsonErrors: [],
+      isJsonValid: true,
+      isJsonValidating: false,
       JSONIs: "document",
       queryModifiers: { limit: 10, startAt: 1 },
       orderBy1: { property: "", direction: "asc" },
@@ -277,7 +306,7 @@ export default {
     documentProperties() {
       const { contracts, selectedContractId } = this;
       console.log("cc", contracts[selectedContractId]);
-      const properties = ['$id'];
+      const properties = ["$id"];
       console.log("ts", this.selectedContract);
       if (this.selectedContract.documents[this.selectedDocumentType]) {
         console.log(this.selectedContract.documents[this.selectedDocumentType]);
@@ -370,7 +399,57 @@ export default {
     }
   },
   methods: {
-    ...mapActions(["submitDocument", "queryDocuments", "showSnackError", "addContract"]),
+    ...mapActions([
+      "submitDocument",
+      "queryDocuments",
+      "showSnackError",
+      "addContract",
+      "validateDocument",
+    ]),
+    async validateJSONSchema() {
+      console.log("validating");
+      const { selectedIdentityId, selectedContractId, selectedDocumentType } = this;
+      this.isJsonValidating = true;
+
+      // Remember last async call to ignore delayed results and avoid race conditions
+      this.nonce = Date.now();
+
+      let parsedJSON;
+      try {
+        parsedJSON = JSON.parse(this.json.toString());
+        this.jsonErrors = [];
+      } catch (e) {
+        console.log(e);
+        this.jsonErrors = [e];
+        this.isJsonValid = false;
+        this.isJsonValidating = false;
+        return;
+      }
+
+      const { validationResult, nonce } = await this.validateDocument({
+        identityId: selectedIdentityId,
+        contractId: selectedContractId,
+        type: selectedDocumentType,
+        json: parsedJSON,
+        nonce: this.nonce,
+      });
+
+      if (this.nonce === nonce) {
+        this.isJsonValidating = false;
+        console.log("validationResult :>> ", validationResult);
+        this.isJsonValid = validationResult.isValid();
+        this.jsonErrors = validationResult.errors.map((error) => {
+          return `${error.dataPath}: ${error.message}`;
+        });
+        console.log("jsonErrors", this.jsonErrors);
+      }
+    },
+    aceEditorInit() {
+      const that = this;
+      this.$refs.aceEditor.editor.session.on("change", function () {
+        that.validateJSONSchema();
+      });
+    },
     setQueryOpts(uriOpts) {
       const { whereOperators, whereValues, queryModifiers, orderBy1, orderBy2 } = this;
 

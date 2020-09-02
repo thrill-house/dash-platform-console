@@ -325,6 +325,56 @@ export default new Vuex.Store({
         console.error("Something went wrong:", e);
       }
     },
+    async validateDocument({ dispatch }, { identityId, contractId, type, json, nonce }) {
+      console.log("validating document");
+      console.log({ identityId });
+      console.log({ contractId });
+      console.log({ json });
+
+      const clientAppsOpts = {
+        network: "evonet",
+        wallet: { mnemonic: this.state.wallet.mnemonic },
+        apps: {
+          tutorialContract: {
+            contractId,
+          },
+        },
+      };
+      console.log("second dashjs client opts", clientAppsOpts);
+
+      const sdkApps = new DashJS.Client(clientAppsOpts);
+      const { platform } = sdkApps;
+
+      try {
+        console.log({ identityId });
+        const identity = await platform.identities.get(identityId);
+        // const identity = await cachedOrGetIdentity(client, identityId);
+
+        console.log({ identity });
+
+        // Create the note document
+        const document = await platform.documents.create(
+          `tutorialContract.${type}`,
+          identity,
+          json
+        );
+        console.log({ document });
+        // validate the document
+        const validationResult = await platform.dpp.document.validate(document);
+        if (validationResult.isValid()) {
+          console.log("validation success");
+        } else {
+          console.log("validation failed");
+        }
+        console.log(validationResult);
+        return { validationResult, nonce };
+      } catch (e) {
+        dispatch("showSnackError", e);
+        console.error("Something went wrong:", e);
+      } finally {
+        sdkApps.disconnect();
+      }
+    },
     async submitDocument({ commit, dispatch }, { identityId, contractId, type, json }) {
       console.log("submitting document");
       console.log({ identityId });
