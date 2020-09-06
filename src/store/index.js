@@ -274,7 +274,11 @@ export default new Vuex.Store({
     async registerName({ commit }, { identityId, name }) {
       // const identity = await client.platform.identities.get(identityId);
       const identity = await cachedOrGetIdentity(client, identityId);
-      const createDocument = await client.platform.names.register(name + ".dash", identity);
+      const createDocument = await client.platform.names.register(
+        name + ".dash",
+        { dashUniqueIdentityId: identity.getId() },
+        identity
+      );
       console.log("createDocument", createDocument);
       const [doc] = await client.platform.documents.get("dpns.domain", {
         where: [
