@@ -342,7 +342,6 @@ export default {
   },
   watch: {
     sendDashDialog() {
-      console.log("hello");
       setTimeout(() => this.$refs.sendtoamount.focus(), 150);
       // this.$refs.sendtoamount.focus();
     },
