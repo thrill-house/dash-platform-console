@@ -142,7 +142,7 @@ export default new Vuex.Store({
         // )
         // const req = await this.$axios.get(`http://localhost:5000/evodrip/us-central1/evofaucet/drip/${address}`)
         const reqs = [
-          axios.get(`https://us-central1-evodrip.cloudfunctions.net/evofaucet/drip/${address}`),
+          // axios.get(`https://us-central1-evodrip.cloudfunctions.net/evofaucet/drip/${address}`),
           axios.get(`http://134.122.104.155:5050/drip/${address}`),
         ];
         await Promise.race(reqs);
@@ -214,7 +214,7 @@ export default new Vuex.Store({
       commit("setSyncing", true);
       try {
         const clientOptsQuery = {
-          network: "evonet",
+          dapiAddresses:['127.0.0.1:3000'],
           apps: {
             // dpns: {
             //   contractId: "7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM",
@@ -286,7 +286,7 @@ export default new Vuex.Store({
           ["normalizedLabel", "==", name.toLowerCase()],
         ],
       });
-      console.log("doc", doc);
+      console.log("doc", doc.toJSON());
       commit("addName", { identity, name });
     },
     async registerContract({ commit, dispatch }, { identityId, json }) {
@@ -336,7 +336,9 @@ export default new Vuex.Store({
       console.log({ json });
 
       const clientAppsOpts = {
-        network: "evonet",
+        dapiAddresses: [
+          '127.0.0.1:3000',
+        ],
         wallet: { mnemonic: this.state.wallet.mnemonic },
         apps: {
           tutorialContract: {
@@ -386,15 +388,17 @@ export default new Vuex.Store({
       console.log({ json });
 
       const clientAppsOpts = {
-        network: "evonet",
+        dapiAddresses: [
+          '127.0.0.1:3000',
+        ],
         wallet: { mnemonic: this.state.wallet.mnemonic },
         apps: {
           tutorialContract: {
             contractId,
           },
-          // dpns: {
-          //   contractId: "7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM",
-          // },
+          dpns: {
+            contractId: "HpwQa19Pq85oMr1ZvJd4aK88WBH1vdW5G8MYB5v9eqbg",
+          },
         },
       };
       console.log("second dashjs client opts", clientAppsOpts);
@@ -453,14 +457,17 @@ export default new Vuex.Store({
 
         console.log("mnemonic is", mnemonic);
         client = new DashJS.Client({
-          network: "evonet",
+          
+        dapiAddresses: [
+          '127.0.0.1:3000',
+        ],
           wallet: {
             mnemonic,
           },
           apps: {
-            // dpns: {
-            //   contractId: "7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM",
-            // },
+            dpns: {
+              contractId: "HpwQa19Pq85oMr1ZvJd4aK88WBH1vdW5G8MYB5v9eqbg",
+            },
           },
         });
         // const onReceivedTransaction = function (data) {
