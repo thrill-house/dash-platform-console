@@ -216,9 +216,9 @@ export default new Vuex.Store({
         const clientOptsQuery = {
           dapiAddresses:['127.0.0.1:3000'],
           apps: {
-            // dpns: {
-            //   contractId: "7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM",
-            // },
+            dpns: {
+              contractId: process.env.VUE_APP_DPNS_CONTRACT_ID
+            },
             tutorialContract: {
               contractId,
             },
@@ -397,7 +397,7 @@ export default new Vuex.Store({
             contractId,
           },
           dpns: {
-            contractId: "HpwQa19Pq85oMr1ZvJd4aK88WBH1vdW5G8MYB5v9eqbg",
+            contractId: process.env.VUE_APP_DPNS_CONTRACT_ID
           },
         },
       };
@@ -441,6 +441,7 @@ export default new Vuex.Store({
       commit("resetSync", true);
 
       console.debug("Start wallet sync...");
+      console.log(process.env)
 
       try {
         console.dir(client, { depth: 5 });
@@ -454,22 +455,25 @@ export default new Vuex.Store({
           dispatch("showSnackError", e);
           console.log(e);
         }
+        let clientOpts = {
+            dapiAddresses: process.env.VUE_APP_DAPIADDRESSES ? JSON.parse(process.env.VUE_APP_DAPIADDRESSES) : undefined,
 
-        console.log("mnemonic is", mnemonic);
-        client = new DashJS.Client({
-          
-        dapiAddresses: [
-          '127.0.0.1:3000',
-        ],
           wallet: {
             mnemonic,
           },
           apps: {
             dpns: {
-              contractId: "HpwQa19Pq85oMr1ZvJd4aK88WBH1vdW5G8MYB5v9eqbg",
+              contractId: process.env.VUE_APP_DPNS_CONTRACT_ID
             },
           },
-        });
+        }
+        
+        //remove undefined keys
+        clientOpts = JSON.parse(JSON.stringify(clientOpts))
+        
+        console.log("mnemonic is", mnemonic);
+        
+        client = new DashJS.Client(clientOpts);
         // const onReceivedTransaction = function (data) {
         //   const { account } = client;
         //   console.log("Received tx", data.txid);
@@ -491,6 +495,7 @@ export default new Vuex.Store({
         console.dir({ client }, { depth: 5 });
       } catch (e) {
         console.debug("Wallet synchronized with an error:");
+        console.error(e)
         dispatch("showSnackError", e);
         commit("setError", e);
         commit("setSyncing", false);
