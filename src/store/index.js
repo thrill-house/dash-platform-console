@@ -145,6 +145,12 @@ export default new Vuex.Store({
           // axios.get(`https://us-central1-evodrip.cloudfunctions.net/evofaucet/drip/${address}`),
           axios.get(`http://134.122.104.155:5050/drip/${address}`),
         ];
+
+        if (process.env.VUE_APP_DAPIADDRESSES && JSON.parse(process.env.VUE_APP_DAPIADDRESSES)[0]) {
+          const ip = JSON.parse(process.env.VUE_APP_DAPIADDRESSES)[0].split(':')[0]
+          reqs.push(axios.get(`http://${ip}:5050/drip/${address}`))
+        }
+
         await Promise.race(reqs);
         console.log("... faucet dropped.");
         console.log(reqs);
