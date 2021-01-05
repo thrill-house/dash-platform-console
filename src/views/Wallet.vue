@@ -356,7 +356,9 @@ export default {
       }, 1000);
     },
     goToFaucet() {
-      window.open("http://faucet.evonet.networks.dash.org/", "_blank");
+      // window.open("http://faucet.evonet.networks.dash.org/", "_blank");
+      window.open("http://testnet-452625393.us-west-2.elb.amazonaws.com/", "_blank");
+      
     },
     async forgetState() {
       this.mnemonicText = "";

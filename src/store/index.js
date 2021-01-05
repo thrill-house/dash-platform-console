@@ -5,6 +5,9 @@ import createPersistedState from "vuex-persistedstate";
 
 Vue.use(Vuex);
 
+      console.log('process.env', process.env)
+      console.dir(process.env)
+
 const DashJS = require("dash");
 console.log({ DashJS });
 // eslint-disable-next-line no-unused-vars
@@ -204,7 +207,7 @@ export default new Vuex.Store({
           satoshis: satoshis, // 1 Dash
         });
         const result = await account.broadcastTransaction(transaction);
-        console.log("Transaction broadcast!\nTransaction ID:", result);
+       console.log("Transaction broadcast!\nTransaction ID:", result);
         dispatch("refreshWallet");
       } catch (e) {
         console.error("Something went wrong:", e);
@@ -219,17 +222,17 @@ export default new Vuex.Store({
       console.log({ queryOpts });
       commit("setSyncing", true);
       try {
-        const clientOptsQuery = {
-          dapiAddresses:['127.0.0.1:3000'],
+        let clientOptsQuery = {
+          passFakeAssetLockProofForTests: process.env.VUE_APP_LOCALNODE,
+          dapiAddresses: process.env.VUE_APP_DAPIADDRESSES ? JSON.parse(process.env.VUE_APP_DAPIADDRESSES) : undefined,
           apps: {
-            dpns: {
-              contractId: process.env.VUE_APP_DPNS_CONTRACT_ID
-            },
             tutorialContract: {
               contractId,
             },
+            dpns: process.env.VUE_APP_DPNS_CONTRACT_ID ? { contractId: process.env.VUE_APP_DPNS_CONTRACT_ID } : undefined
           },
         };
+        clientOptsQuery = JSON.parse(JSON.stringify(clientOptsQuery))
         console.log({ clientOptsQuery });
         const clientQuery = new DashJS.Client(clientOptsQuery);
         // await clientQuery.isReady();
@@ -341,10 +344,9 @@ export default new Vuex.Store({
       console.log({ contractId });
       console.log({ json });
 
-      const clientAppsOpts = {
-        dapiAddresses: [
-          '127.0.0.1:3000',
-        ],
+      let clientAppsOpts = {
+        passFakeAssetLockProofForTests: process.env.VUE_APP_LOCALNODE,
+        dapiAddresses: process.env.VUE_APP_DAPIADDRESSES ? JSON.parse(process.env.VUE_APP_DAPIADDRESSES) : undefined,
         wallet: { mnemonic: this.state.wallet.mnemonic },
         apps: {
           tutorialContract: {
@@ -354,6 +356,8 @@ export default new Vuex.Store({
       };
       console.log("second dashjs client opts", clientAppsOpts);
 
+      clientAppsOpts = JSON.parse(JSON.stringify(clientAppsOpts))
+      
       const sdkApps = new DashJS.Client(clientAppsOpts);
       const { platform } = sdkApps;
 
@@ -393,22 +397,22 @@ export default new Vuex.Store({
       console.log({ contractId });
       console.log({ json });
 
-      const clientAppsOpts = {
-        dapiAddresses: [
-          '127.0.0.1:3000',
-        ],
+      let clientAppsOpts = {
+        passFakeAssetLockProofForTests: process.env.VUE_APP_LOCALNODE,
+        dapiAddresses: process.env.VUE_APP_DAPIADDRESSES ? JSON.parse(process.env.VUE_APP_DAPIADDRESSES) : undefined,
         wallet: { mnemonic: this.state.wallet.mnemonic },
         apps: {
           tutorialContract: {
             contractId,
           },
-          dpns: {
-            contractId: process.env.VUE_APP_DPNS_CONTRACT_ID
-          },
+          dpns: process.env.VUE_APP_DPNS_CONTRACT_ID ? { contractId: process.env.VUE_APP_DPNS_CONTRACT_ID } : undefined
+
         },
       };
+        
       console.log("second dashjs client opts", clientAppsOpts);
 
+      clientAppsOpts = JSON.parse(JSON.stringify(clientAppsOpts))
       const sdkApps = new DashJS.Client(clientAppsOpts);
       const { platform } = sdkApps;
 
@@ -447,7 +451,6 @@ export default new Vuex.Store({
       commit("resetSync", true);
 
       console.debug("Start wallet sync...");
-      console.log(process.env)
 
       try {
         console.dir(client, { depth: 5 });
@@ -462,23 +465,23 @@ export default new Vuex.Store({
           console.log(e);
         }
         let clientOpts = {
+            passFakeAssetLockProofForTests: process.env.VUE_APP_LOCALNODE,
             dapiAddresses: process.env.VUE_APP_DAPIADDRESSES ? JSON.parse(process.env.VUE_APP_DAPIADDRESSES) : undefined,
 
           wallet: {
             mnemonic,
           },
           apps: {
-            dpns: {
-              contractId: process.env.VUE_APP_DPNS_CONTRACT_ID
-            },
-          },
+            dpns: process.env.VUE_APP_DPNS_CONTRACT_ID ? { contractId: process.env.VUE_APP_DPNS_CONTRACT_ID } : undefined
+          }
         }
         
         //remove undefined keys
+        
         clientOpts = JSON.parse(JSON.stringify(clientOpts))
         
         console.log("mnemonic is", mnemonic);
-        
+        console.log('clientOpts :>> ', clientOpts);
         client = new DashJS.Client(clientOpts);
         // const onReceivedTransaction = function (data) {
         //   const { account } = client;
