@@ -27,7 +27,7 @@
       ></v-progress-linear>
     </v-app-bar>
 
-    <v-content>
+    <v-main>
       <v-container fluid>
         <!-- <v-alert
           v-model="welcome"
@@ -46,7 +46,7 @@
           <v-btn dark text @click="snackbar.show = false">Close</v-btn>
         </v-snackbar>
       </v-container>
-    </v-content>
+    </v-main>
     <v-footer padless>
       <v-col class="text-center" cols="12">
         {{ new Date().getFullYear() }} —
@@ -67,7 +67,11 @@
 import { mapGetters } from "vuex"; //hi
 export default {
   data() {
-    return { drawer: false, welcome: true, snackbar: { show: false, text: "" } };
+    return {
+      drawer: false,
+      welcome: true,
+      snackbar: { show: false, text: "" },
+    };
   },
   computed: {
     ...mapGetters([
