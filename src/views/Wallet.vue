@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-container fluid style="max-width: 900px;">
+    <v-container fluid style="max-width: 900px">
       <v-card class="mx-auto">
         <v-card-title>
           <span class="headline">Wallet Status</span>
@@ -19,7 +19,7 @@
         </v-card-text></v-card
       >
     </v-container>
-    <v-container fluid style="max-width: 900px;">
+    <v-container fluid style="max-width: 900px">
       <v-card v-if="hasWallet" class="mx-auto mt-10">
         <v-container>
           <v-row>
@@ -36,7 +36,7 @@
                           small
                           right
                           :loading="isRefreshingBalance"
-                          style="z-index: 4;"
+                          style="z-index: 4"
                           @click="refreshWallet"
                           v-on="on"
                         >
@@ -70,7 +70,7 @@
                   </v-list-item-title>
                   <v-list-item-subtitle>
                     <pre
-                      style="font-size: 1.5em;"
+                      style="font-size: 1.5em"
                       class="text-wrap"
                       @click="copyReceivingAddressToClipboard"
                       >{{ getWallet.unusedAddress }}
@@ -86,12 +86,12 @@
               </v-list-item>
             </v-col>
 
-            <v-col style="text-align: center;">
-              <div style="display: inline-block;" @click="copyReceivingAddressToClipboard">
+            <v-col style="text-align: center">
+              <div style="display: inline-block" @click="copyReceivingAddressToClipboard">
                 <qrcode
                   :value="getWallet.unusedAddress"
                   :options="{ width: 200 }"
-                  style="margin-top: -5px;"
+                  style="margin-top: -5px"
                 ></qrcode>
               </div>
             </v-col>
@@ -118,7 +118,7 @@
         </v-card-actions>
       </v-card>
     </v-container>
-    <v-container v-if="hasWallet" fluid style="max-width: 900px;">
+    <v-container v-if="hasWallet" fluid style="max-width: 900px">
       <v-expansion-panels :accordion="true" :multiple="true" hover max-width="700px">
         <v-expansion-panel max-width="700px">
           <v-expansion-panel-header>Addresses</v-expansion-panel-header>
@@ -238,7 +238,7 @@
                   <v-list-item-content>
                     <v-list-item-title class="headline mb-2">Send To</v-list-item-title>
                     <v-list-item-subtitle>
-                      <pre style="font-size: 1.2em;" class="text-wrap"
+                      <pre style="font-size: 1.2em" class="text-wrap"
                         >{{ getWallet.unusedAddress }}
                     </pre
                       >
@@ -358,7 +358,6 @@ export default {
     goToFaucet() {
       // window.open("http://faucet.evonet.networks.dash.org/", "_blank");
       window.open("http://testnet-452625393.us-west-2.elb.amazonaws.com/", "_blank");
-      
     },
     async forgetState() {
       this.mnemonicText = "";

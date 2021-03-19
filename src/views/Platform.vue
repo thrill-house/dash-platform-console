@@ -1,5 +1,5 @@
 <template>
-  <v-container style="max-width: 900px;">
+  <v-container style="max-width: 900px">
     <v-row align="center" justify="center">
       <v-col class="d-flex" cols="12">
         <v-combobox
@@ -18,7 +18,7 @@
           top
           right
           color="primary"
-          style="z-index: 4; left: 0px;"
+          style="z-index: 4; left: 0px"
           @click="createIdentity()"
         >
           <v-icon>mdi-plus</v-icon>
@@ -156,7 +156,12 @@ export default {
       comboIds.push({ header: "My Identities" });
       comboIds = comboIds.concat(
         this.$store.state.identities.map(function (identity) {
-          return { value: identity.id, text: identity.id, identityId: identity.id, isMine: true };
+          return {
+            value: identity.id,
+            text: identity.id,
+            identityId: identity.id,
+            isMine: true,
+          };
         })
       );
 
@@ -238,7 +243,9 @@ export default {
             // Here it is direct text input: typeof selectedIdentity === 'string'
             console.log("fetching unknown contract and adding to state");
             console.log({ contractId: selectedIdentity });
-            const foundContract = await this.addContract({ contractId: selectedIdentity });
+            const foundContract = await this.addContract({
+              contractId: selectedIdentity,
+            });
 
             if (foundContract) {
               console.log("Found valid contract and added to awesomebar", foundContract);

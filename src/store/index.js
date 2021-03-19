@@ -5,8 +5,8 @@ import createPersistedState from "vuex-persistedstate";
 
 Vue.use(Vuex);
 
-      console.log('process.env', process.env)
-      console.dir(process.env)
+console.log("process.env", process.env);
+console.dir(process.env);
 
 const DashJS = require("dash");
 console.log({ DashJS });
@@ -150,8 +150,8 @@ export default new Vuex.Store({
         ];
 
         if (process.env.VUE_APP_DAPIADDRESSES && JSON.parse(process.env.VUE_APP_DAPIADDRESSES)[0]) {
-          const ip = JSON.parse(process.env.VUE_APP_DAPIADDRESSES)[0].split(':')[0]
-          reqs.push(axios.get(`http://${ip}:5050/drip/${address}`))
+          const ip = JSON.parse(process.env.VUE_APP_DAPIADDRESSES)[0].split(":")[0];
+          reqs.push(axios.get(`http://${ip}:5050/drip/${address}`));
         }
 
         await Promise.race(reqs);
@@ -207,7 +207,7 @@ export default new Vuex.Store({
           satoshis: satoshis, // 1 Dash
         });
         const result = await account.broadcastTransaction(transaction);
-       console.log("Transaction broadcast!\nTransaction ID:", result);
+        console.log("Transaction broadcast!\nTransaction ID:", result);
         dispatch("refreshWallet");
       } catch (e) {
         console.error("Something went wrong:", e);
@@ -224,15 +224,19 @@ export default new Vuex.Store({
       try {
         let clientOptsQuery = {
           passFakeAssetLockProofForTests: process.env.VUE_APP_LOCALNODE,
-          dapiAddresses: process.env.VUE_APP_DAPIADDRESSES ? JSON.parse(process.env.VUE_APP_DAPIADDRESSES) : undefined,
+          dapiAddresses: process.env.VUE_APP_DAPIADDRESSES
+            ? JSON.parse(process.env.VUE_APP_DAPIADDRESSES)
+            : undefined,
           apps: {
             tutorialContract: {
               contractId,
             },
-            dpns: process.env.VUE_APP_DPNS_CONTRACT_ID ? { contractId: process.env.VUE_APP_DPNS_CONTRACT_ID } : undefined
+            dpns: process.env.VUE_APP_DPNS_CONTRACT_ID
+              ? { contractId: process.env.VUE_APP_DPNS_CONTRACT_ID }
+              : undefined,
           },
         };
-        clientOptsQuery = JSON.parse(JSON.stringify(clientOptsQuery))
+        clientOptsQuery = JSON.parse(JSON.stringify(clientOptsQuery));
         console.log({ clientOptsQuery });
         const clientQuery = new DashJS.Client(clientOptsQuery);
         // await clientQuery.isReady();
@@ -346,7 +350,9 @@ export default new Vuex.Store({
 
       let clientAppsOpts = {
         passFakeAssetLockProofForTests: process.env.VUE_APP_LOCALNODE,
-        dapiAddresses: process.env.VUE_APP_DAPIADDRESSES ? JSON.parse(process.env.VUE_APP_DAPIADDRESSES) : undefined,
+        dapiAddresses: process.env.VUE_APP_DAPIADDRESSES
+          ? JSON.parse(process.env.VUE_APP_DAPIADDRESSES)
+          : undefined,
         wallet: { mnemonic: this.state.wallet.mnemonic },
         apps: {
           tutorialContract: {
@@ -356,8 +362,8 @@ export default new Vuex.Store({
       };
       console.log("second dashjs client opts", clientAppsOpts);
 
-      clientAppsOpts = JSON.parse(JSON.stringify(clientAppsOpts))
-      
+      clientAppsOpts = JSON.parse(JSON.stringify(clientAppsOpts));
+
       const sdkApps = new DashJS.Client(clientAppsOpts);
       const { platform } = sdkApps;
 
@@ -399,20 +405,23 @@ export default new Vuex.Store({
 
       let clientAppsOpts = {
         passFakeAssetLockProofForTests: process.env.VUE_APP_LOCALNODE,
-        dapiAddresses: process.env.VUE_APP_DAPIADDRESSES ? JSON.parse(process.env.VUE_APP_DAPIADDRESSES) : undefined,
+        dapiAddresses: process.env.VUE_APP_DAPIADDRESSES
+          ? JSON.parse(process.env.VUE_APP_DAPIADDRESSES)
+          : undefined,
         wallet: { mnemonic: this.state.wallet.mnemonic },
         apps: {
           tutorialContract: {
             contractId,
           },
-          dpns: process.env.VUE_APP_DPNS_CONTRACT_ID ? { contractId: process.env.VUE_APP_DPNS_CONTRACT_ID } : undefined
-
+          dpns: process.env.VUE_APP_DPNS_CONTRACT_ID
+            ? { contractId: process.env.VUE_APP_DPNS_CONTRACT_ID }
+            : undefined,
         },
       };
-        
+
       console.log("second dashjs client opts", clientAppsOpts);
 
-      clientAppsOpts = JSON.parse(JSON.stringify(clientAppsOpts))
+      clientAppsOpts = JSON.parse(JSON.stringify(clientAppsOpts));
       const sdkApps = new DashJS.Client(clientAppsOpts);
       const { platform } = sdkApps;
 
@@ -465,23 +474,27 @@ export default new Vuex.Store({
           console.log(e);
         }
         let clientOpts = {
-            passFakeAssetLockProofForTests: process.env.VUE_APP_LOCALNODE,
-            dapiAddresses: process.env.VUE_APP_DAPIADDRESSES ? JSON.parse(process.env.VUE_APP_DAPIADDRESSES) : undefined,
+          passFakeAssetLockProofForTests: process.env.VUE_APP_LOCALNODE,
+          dapiAddresses: process.env.VUE_APP_DAPIADDRESSES
+            ? JSON.parse(process.env.VUE_APP_DAPIADDRESSES)
+            : undefined,
 
           wallet: {
             mnemonic,
           },
           apps: {
-            dpns: process.env.VUE_APP_DPNS_CONTRACT_ID ? { contractId: process.env.VUE_APP_DPNS_CONTRACT_ID } : undefined
-          }
-        }
-        
+            dpns: process.env.VUE_APP_DPNS_CONTRACT_ID
+              ? { contractId: process.env.VUE_APP_DPNS_CONTRACT_ID }
+              : undefined,
+          },
+        };
+
         //remove undefined keys
-        
-        clientOpts = JSON.parse(JSON.stringify(clientOpts))
-        
+
+        clientOpts = JSON.parse(JSON.stringify(clientOpts));
+
         console.log("mnemonic is", mnemonic);
-        console.log('clientOpts :>> ', clientOpts);
+        console.log("clientOpts :>> ", clientOpts);
         client = new DashJS.Client(clientOpts);
         // const onReceivedTransaction = function (data) {
         //   const { account } = client;
@@ -504,7 +517,7 @@ export default new Vuex.Store({
         console.dir({ client }, { depth: 5 });
       } catch (e) {
         console.debug("Wallet synchronized with an error:");
-        console.error(e)
+        console.error(e);
         dispatch("showSnackError", e);
         commit("setError", e);
         commit("setSyncing", false);
